@@ -1,7 +1,10 @@
-﻿namespace ConsoleApp1
+﻿using MySql.Data.MySqlClient;
+
+namespace ConsoleApp1
 {
     internal class Team
     {
+        private int _teamID;
         private string _name;
         private League _league;
         private List<Player> _players = new List<Player>();
@@ -14,7 +17,7 @@
         private int _goalDifference;
         private int _points;
 
-
+        public int TeamID { get => _teamID; private set => _teamID = value; }
         public string Name { get => _name; set => _name = value; }
         public League League { get => _league; set => _league = value; }
         public List<Player> Players { get => _players; }
@@ -31,19 +34,109 @@
         {
             Name = name;
             League = league;
-            league.AddTeam(this);
+            if (AddToDatabase(new DatabaseConnection()))
+            {
+                league.AddTeam(this);
+            }
+            else { throw new Exception("Failed to add team to the database."); }
+        }
+
+
+        private bool DoesTeamNameExistsInLeague(DatabaseConnection dbConnection)
+        {
+            if (dbConnection.OpenConnection())
+            {
+                try
+                {
+                    using (MySqlConnection connection = dbConnection.GetConnection())
+                    {
+                        string checkQuery = "SELECT COUNT(*) FROM Teams WHERE TeamName = @TeamName AND LeagueID = @LeagueID;";
+                        using (MySqlCommand command = new MySqlCommand(checkQuery, connection))
+                        {
+                            command.Parameters.AddWithValue("@TeamName", Name);
+                            command.Parameters.AddWithValue("@LeagueID", League.LeagueID);
+
+                            int count = Convert.ToInt32(command.ExecuteScalar());
+
+                            return count > 0;
+                        }
+                    }
+                }
+                finally
+                {
+                    dbConnection.CloseConnection();
+                }
+            }
+            else
+            {
+                Console.WriteLine("Failed to open the database connection.");
+                return false;
+            }
+        }
+
+        private bool AddToDatabase(DatabaseConnection dbConnection)
+        {
+            if (!DoesTeamNameExistsInLeague(dbConnection))
+            {
+                if (dbConnection.OpenConnection())
+                {
+                    try
+                    {
+                        using (MySqlConnection connection = dbConnection.GetConnection())
+                        {
+                            string insertQuery = "INSERT INTO Teams (TeamName, LeagueID, GamesPlayed, GamesWon, GamesDrawn, GamesLost, GoalsFor, GoalsAgainst, GoalDifference, Points) VALUES (@TeamName, @LeagueID, @GamesPlayed, @GamesWon, @GamesDrawn, @GamesLost, @GoalsFor, @GoalsAgainst, @GoalDifference, @Points); SELECT LAST_INSERT_ID();";
+                            using (MySqlCommand command = new MySqlCommand(insertQuery, connection))
+                            {
+                                command.Parameters.AddWithValue("@TeamName", Name);
+                                command.Parameters.AddWithValue("@LeagueID", League.LeagueID);
+                                command.Parameters.AddWithValue("@GamesPlayed", GamesPlayed);
+                                command.Parameters.AddWithValue("@GamesWon", GamesWon);
+                                command.Parameters.AddWithValue("@GamesDrawn", GamesDrawn);
+                                command.Parameters.AddWithValue("@GamesLost", GamesLost);
+                                command.Parameters.AddWithValue("@GoalsFor", GoalsFor);
+                                command.Parameters.AddWithValue("@GoalsAgainst", GoalsAgainst);
+                                command.Parameters.AddWithValue("@GoalDifference", GoalDifference);
+                                command.Parameters.AddWithValue("@Points", Points);
+
+                                TeamID = Convert.ToInt32(command.ExecuteScalar());
+
+                                if (TeamID > 0)
+                                {
+                                    Console.WriteLine("New team added to the database with ID: " + TeamID);
+                                    return true;
+                                }
+                                return true;
+                            }
+                        }
+                    }
+                    finally
+                    {
+                        dbConnection.CloseConnection();
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("Failed to open the database connection.");
+                    return false;
+                }
+            }
+            else
+            {
+                Console.WriteLine("A team with the same name already exists in the same league.");
+                return false;
+            }
         }
 
         public void AddPlayer(Player player)
         {
             Players.Add(player);
-            player.PlayerTeam = this;
+            player.Team = this;
         }
 
         public void RemovePlayer(Player player)
         {
             Players.Remove(player);
-            player.PlayerTeam = null;
+            player.Team = null;
         }
 
         public void CalculateStats()

@@ -1,15 +1,20 @@
-﻿namespace ConsoleApp1
+﻿using MySql.Data.MySqlClient;
+
+namespace ConsoleApp1
 {
     internal class Program
     {
         static void Main(string[] args)
         {
-            League l = new League("Dundee League");
+            ClearDatabase();
+            Console.WriteLine("Database Cleared");
 
-            Team douglas = new Team("Douglas", l);
-            Team fintry = new Team("Fintry", l);
-            Team ferry = new Team("Ferry", l);
-            Team lochee = new Team("Lochee", l);
+            League dundeeLeague = new League("Dundee League");
+
+            Team douglas = new Team("Douglas", dundeeLeague);
+            Team fintry = new Team("Fintry", dundeeLeague);
+            Team ferry = new Team("Ferry", dundeeLeague);
+            Team lochee = new Team("Lochee", dundeeLeague);
 
             Player johnSmith = new Player("John", "Smith", 25, 1, 1, douglas);
             Player daveSmith = new Player("Dave", "Smith", 25, 2, 2, douglas);
@@ -21,13 +26,14 @@
 
             List<Player> douglasVsFintryScorers = new List<Player> { bobSmith, eoinSmith, eoinSmith };
             List<Player> douglasVsFintryAssisters = new List<Player> { bobSmith, bobSmith, eoinSmith };
+            DateTime date = DateTime.Now;
 
-            Match douglasVsFerry = new Match(douglas, ferry, 2, 0, douglasVsFerryScorers, douglasVsFerryAssisters);
-            Match fintryVsLochee = new Match(fintry, lochee, 1, 1);
-            Match douglasVsFintry = new Match(douglas, fintry, 3, 1, douglasVsFintryScorers, douglasVsFintryAssisters);
-            Match ferryVsLochee = new Match(ferry, lochee, 1, 2);
+            Match douglasVsFerry = new Match(douglas, ferry, date, 2, 0, douglasVsFerryScorers, douglasVsFerryAssisters);
+            Match fintryVsLochee = new Match(fintry, lochee, date, 1, 1);
+            Match douglasVsFintry = new Match(douglas, fintry, date, 3, 1, douglasVsFintryScorers, douglasVsFintryAssisters);
+            Match ferryVsLochee = new Match(ferry, lochee, date, 1, 2);
 
-            foreach (Team team in l.Teams)
+            foreach (Team team in dundeeLeague.Teams)
             {
                 Console.WriteLine($"Team: {team.Name}, Points: {team.Points} GD: {team.GoalDifference}");
             }
@@ -40,6 +46,34 @@
                 else
                     Console.WriteLine($"Player: {player.FirstName} {player.LastName}, Goals: {player.GoalsScored}, Assists: {player.Assists}");
 
+            }
+        }
+
+        public static void ClearDatabase()
+        {
+            DatabaseConnection dbConnection = new DatabaseConnection();
+
+            if (dbConnection.OpenConnection())
+            {
+                try
+                {
+                    using (MySqlConnection connection = dbConnection.GetConnection())
+                    {
+                        string deleteQuery = "DELETE FROM Players; DELETE FROM Matches; DELETE FROM Teams; DELETE FROM Leagues;";
+                        using (MySqlCommand command = new MySqlCommand(deleteQuery, connection))
+                        {
+                            command.ExecuteNonQuery();
+                        }
+                    }
+                }
+                finally
+                {
+                    dbConnection.CloseConnection();
+                }
+            }
+            else
+            {
+                Console.WriteLine("Failed to open the database connection.");
             }
         }
     }
