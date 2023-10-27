@@ -20,11 +20,59 @@
             AwayTeam = awayTeam;
             HomeGoals = homeGoals;
             AwayGoals = awayGoals;
+
             CalculateResult();
             AssignPoints();
             homeTeam.CalculateStats();
             awayTeam.CalculateStats();
             homeTeam.League.SortTeams();
+
+            CheckCleenSheets();
+        }
+
+        public Match(Team homeTeam, Team awayTeam, int homeGoals, int awayGoals, List<Player> scorers)
+        {
+            HomeTeam = homeTeam;
+            AwayTeam = awayTeam;
+            HomeGoals = homeGoals;
+            AwayGoals = awayGoals;
+
+            CalculateResult();
+            AssignPoints();
+            homeTeam.CalculateStats();
+            awayTeam.CalculateStats();
+            homeTeam.League.SortTeams();
+
+            CheckCleenSheets();
+            foreach (Player player in scorers)
+            {
+                AddScorer(player);
+            }
+
+        }
+
+        public Match(Team homeTeam, Team awayTeam, int homeGoals, int awayGoals, List<Player> scorers, List<Player> assisters)
+        {
+            HomeTeam = homeTeam;
+            AwayTeam = awayTeam;
+            HomeGoals = homeGoals;
+            AwayGoals = awayGoals;
+
+            CalculateResult();
+            AssignPoints();
+            homeTeam.CalculateStats();
+            awayTeam.CalculateStats();
+            homeTeam.League.SortTeams();
+
+            CheckCleenSheets();
+            foreach (Player player in scorers)
+            {
+                AddScorer(player);
+            }
+            foreach (Player player in assisters)
+            {
+                AddAssit(player);
+            }
         }
 
         private void CalculateResult()
@@ -63,6 +111,30 @@
             {
                 HomeTeam.GamesLost++;
                 AwayTeam.GamesWon++;
+            }
+        }
+
+        private void CheckCleenSheets()
+        {
+            if (HomeGoals == 0)
+            {
+                foreach (Player player in AwayTeam.Players)
+                {
+                    if (player.Position == "Goalkeeper" || player.Position == "Defender")
+                    {
+                        AddCleanSheet(player);
+                    }
+                }
+            }
+            if (AwayGoals == 0)
+            {
+                foreach (Player player in HomeTeam.Players)
+                {
+                    if (player.Position == "Goalkeeper" || player.Position == "Defender")
+                    {
+                        AddCleanSheet(player);
+                    }
+                }
             }
         }
 
