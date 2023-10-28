@@ -4,7 +4,7 @@ namespace ConsoleApp1
 {
     internal class Team
     {
-        private int _teamID;
+        private int _teamID = 1;
         private string _name;
         private League _league;
         private List<Player> _players = new List<Player>();
@@ -20,7 +20,7 @@ namespace ConsoleApp1
         public int TeamID { get => _teamID; private set => _teamID = value; }
         public string Name { get => _name; set => _name = value; }
         public League League { get => _league; set => _league = value; }
-        public List<Player> Players { get => _players; }
+        public List<Player> Players { get => _players; private set => _players = value; }
         public int GamesPlayed { get => _gamesPlayed; set => _gamesPlayed = value; }
         public int GamesWon { get => _gamesWon; set => _gamesWon = value; }
         public int GamesDrawn { get => _gamesDrawn; set => _gamesDrawn = value; }
@@ -32,15 +32,28 @@ namespace ConsoleApp1
 
         public Team(string name, League league)
         {
-            Name = name;
-            League = league;
-            if (AddToDatabase(new DatabaseConnection()))
+            this.Name = name;
+            this.League = league;
+            if (!AddToDatabase(new DatabaseConnection()))
             {
-                league.AddTeam(this);
+                throw new Exception("Failed to add team to the database.");
             }
-            else { throw new Exception("Failed to add team to the database."); }
         }
 
+        public Team(int teamID, string name, int gamesPlayed, int gamesWon, int gamesDrawn, int gamesLost, int goalsFor, int goalsAgainst, int goalDifference, int points)
+        {
+            this.TeamID = teamID;
+            this.Name = name;
+            this.Players = Player.GetAllPlayersForTeamFromDatabase(teamID, new DatabaseConnection());
+            this.GamesPlayed = gamesPlayed;
+            this.GamesWon = gamesWon;
+            this.GamesDrawn = gamesDrawn;
+            this.GamesLost = gamesLost;
+            this.GoalsFor = goalsFor;
+            this.GoalsAgainst = goalsAgainst;
+            this.GoalDifference = goalDifference;
+            this.Points = points;
+        }
 
         private bool DoesTeamNameExistsInLeague(DatabaseConnection dbConnection)
         {
@@ -126,6 +139,105 @@ namespace ConsoleApp1
                 return false;
             }
         }
+
+        public static Team GetTeamFromDatabase(int teamID, DatabaseConnection dbConnection)
+        {
+            if (dbConnection.OpenConnection())
+            {
+                try
+                {
+                    using (MySqlConnection connection = dbConnection.GetConnection())
+                    {
+                        string selectQuery = $"SELECT * FROM Teams WHERE TeamID = {teamID};";
+                        using (MySqlCommand command = new MySqlCommand(selectQuery, connection))
+                        {
+                            using (MySqlDataReader reader = command.ExecuteReader())
+                            {
+                                if (reader.Read())
+                                {
+                                    Team team = new Team(
+                                        Convert.ToInt32(reader["TeamID"]),
+                                        reader["TeamName"].ToString(),
+                                        Convert.ToInt32(reader["GamesPlayed"]),
+                                        Convert.ToInt32(reader["GamesWon"]),
+                                        Convert.ToInt32(reader["GamesDrawn"]),
+                                        Convert.ToInt32(reader["GamesLost"]),
+                                        Convert.ToInt32(reader["GoalsFor"]),
+                                        Convert.ToInt32(reader["GoalsAgainst"]),
+                                        Convert.ToInt32(reader["GoalDifference"]),
+                                        Convert.ToInt32(reader["Points"])
+                                    );
+                                    reader.Close();
+                                    return team;
+                                }
+                                reader.Close();
+                                return null;
+                            }
+                        }
+                    }
+                }
+                finally
+                {
+                    dbConnection.CloseConnection();
+                }
+            }
+            else
+            {
+                Console.WriteLine("Failed to open the database connection.");
+                return null;
+            }
+        }
+
+        public static List<Team> GetAllTeamsForLeagueFromDatabase(int leagueID, DatabaseConnection dbConnection)
+        {
+            List<Team> teams = new List<Team>();
+
+            if (dbConnection.OpenConnection())
+            {
+                try
+                {
+                    using (MySqlConnection connection = dbConnection.GetConnection())
+                    {
+                        string selectQuery = $"SELECT * FROM Teams WHERE LeagueID = {leagueID};";
+                        using (MySqlCommand command = new MySqlCommand(selectQuery, connection))
+                        {
+                            using (MySqlDataReader reader = command.ExecuteReader())
+                            {
+                                while (reader.Read())
+                                {
+                                    Team team = new Team(
+                                    Convert.ToInt32(reader["TeamID"]),
+                                    reader["TeamName"].ToString(),
+                                    Convert.ToInt32(reader["GamesPlayed"]),
+                                    Convert.ToInt32(reader["GamesWon"]),
+                                    Convert.ToInt32(reader["GamesDrawn"]),
+                                    Convert.ToInt32(reader["GamesLost"]),
+                                    Convert.ToInt32(reader["GoalsFor"]),
+                                    Convert.ToInt32(reader["GoalsAgainst"]),
+                                    Convert.ToInt32(reader["GoalDifference"]),
+                                    Convert.ToInt32(reader["Points"])
+                                    );
+                                    teams.Add(team);
+
+                                }
+                                reader.Close();
+                                return teams;
+                            }
+                        }
+                    }
+                }
+                finally
+                {
+                    dbConnection.CloseConnection();
+                }
+            }
+            else
+            {
+                Console.WriteLine("Failed to open the database connection.");
+            }
+            throw new Exception("Failed to get team from the database.");
+        }
+
 
         public void AddPlayer(Player player)
         {

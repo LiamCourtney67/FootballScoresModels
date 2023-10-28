@@ -22,11 +22,11 @@ namespace ConsoleApp1
 
         public Match(Team homeTeam, Team awayTeam, DateTime datePlayed, int homeGoals, int awayGoals)
         {
-            HomeTeam = homeTeam;
-            AwayTeam = awayTeam;
-            DatePlayed = datePlayed;
-            HomeGoals = homeGoals;
-            AwayGoals = awayGoals;
+            this.HomeTeam = homeTeam;
+            this.AwayTeam = awayTeam;
+            this.DatePlayed = datePlayed;
+            this.HomeGoals = homeGoals;
+            this.AwayGoals = awayGoals;
 
             if (AddToDatabase(new DatabaseConnection()))
             {
@@ -43,11 +43,11 @@ namespace ConsoleApp1
 
         public Match(Team homeTeam, Team awayTeam, DateTime datePlayed, int homeGoals, int awayGoals, List<Player> scorers)
         {
-            HomeTeam = homeTeam;
-            AwayTeam = awayTeam;
-            DatePlayed = datePlayed;
-            HomeGoals = homeGoals;
-            AwayGoals = awayGoals;
+            this.HomeTeam = homeTeam;
+            this.AwayTeam = awayTeam;
+            this.DatePlayed = datePlayed;
+            this.HomeGoals = homeGoals;
+            this.AwayGoals = awayGoals;
 
             if (AddToDatabase(new DatabaseConnection()))
             {
@@ -68,11 +68,11 @@ namespace ConsoleApp1
 
         public Match(Team homeTeam, Team awayTeam, DateTime datePlayed, int homeGoals, int awayGoals, List<Player> scorers, List<Player> assisters)
         {
-            HomeTeam = homeTeam;
-            AwayTeam = awayTeam;
-            DatePlayed = datePlayed;
-            HomeGoals = homeGoals;
-            AwayGoals = awayGoals;
+            this.HomeTeam = homeTeam;
+            this.AwayTeam = awayTeam;
+            this.DatePlayed = datePlayed;
+            this.HomeGoals = homeGoals;
+            this.AwayGoals = awayGoals;
             if (AddToDatabase(new DatabaseConnection()))
             {
                 CalculateResult();
@@ -92,7 +92,17 @@ namespace ConsoleApp1
                 }
             }
             else { throw new Exception("Failed to add match to the database."); }
+        }
 
+        public Match(int matchID, int homeTeamID, int awayTeamID, DateTime datePlayed, int homeGoals, int awayGoals, string result)
+        {
+            this.MatchID = matchID;
+            this.HomeTeam = Team.GetTeamFromDatabase(homeTeamID, new DatabaseConnection());
+            this.AwayTeam = Team.GetTeamFromDatabase(awayTeamID, new DatabaseConnection());
+            this.DatePlayed = datePlayed;
+            this.HomeGoals = homeGoals;
+            this.AwayGoals = awayGoals;
+            this.Result = result;
         }
 
         public bool DoesMatchExist(DatabaseConnection dbConnection)
@@ -177,6 +187,58 @@ namespace ConsoleApp1
                 return false;
             }
         }
+
+        public static List<Match> GetAllMatchesFromDatabase(DatabaseConnection dbConnection)
+        {
+            List<Match> matches = new List<Match>();
+            if (dbConnection.OpenConnection())
+            {
+                try
+                {
+                    using (MySqlConnection connection = dbConnection.GetConnection())
+                    {
+                        string selectQuery = "SELECT * FROM Matches;";
+                        using (MySqlCommand command = new MySqlCommand(selectQuery, connection))
+                        {
+                            using (MySqlDataReader reader = command.ExecuteReader())
+                            {
+                                while (reader.Read())
+                                {
+                                    Match match = new Match(
+                                        Convert.ToInt32(reader["MatchID"]),
+                                        Convert.ToInt32(reader["HomeTeamID"]),
+                                        Convert.ToInt32(reader["AwayTeamID"]),
+                                        Convert.ToDateTime(reader["DatePlayed"]),
+                                        Convert.ToInt32(reader["HomeGoals"]),
+                                        Convert.ToInt32(reader["AwayGoals"]),
+                                        reader["Result"].ToString()
+                                    );
+                                    matches.Add(match);
+
+                                }
+                                reader.Close();
+                                return matches;
+                            }
+                        }
+                    }
+                }
+                finally
+                {
+                    dbConnection.CloseConnection();
+                }
+            }
+            else
+            {
+                Console.WriteLine("Failed to open the database connection.");
+            }
+            throw new Exception("Failed to get match from the database.");
+        }
+
+        public static Match GetMatchFromDatabase(int matchID, DatabaseConnection dbConnection)
+        {
+            // TODO
+        }
+
 
         private void CalculateResult()
         {

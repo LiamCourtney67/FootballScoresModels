@@ -18,8 +18,15 @@ namespace ConsoleApp1
 
         public League(string name)
         {
-            Name = name;
+            this.Name = name;
             if (!AddToDatabase(new DatabaseConnection())) { throw new Exception("Failed to add league to the database."); }
+        }
+
+        public League(int leagueID, string name)
+        {
+            this.LeagueID = leagueID;
+            this.Name = name;
+            this.Teams = Team.GetAllTeamsForLeagueFromDatabase(leagueID, new DatabaseConnection());
         }
 
         private bool DoesLeagueNameExists(DatabaseConnection dbConnection)
@@ -96,6 +103,53 @@ namespace ConsoleApp1
                 Console.WriteLine("A league with the same name already exists.");
                 return false;
             }
+        }
+
+        public static League GetLeagueFromDatabase(int leagueID, DatabaseConnection dbConnection)
+        {
+            // TODO
+        }
+
+        public static List<League> GetAllLeaguesFromDatabase(DatabaseConnection dbConnection)
+        {
+            List<League> leagues = new List<League>();
+
+            if (dbConnection.OpenConnection())
+            {
+                try
+                {
+                    using (MySqlConnection connection = dbConnection.GetConnection())
+                    {
+                        string selectQuery = "SELECT * FROM Leagues;";
+                        using (MySqlCommand command = new MySqlCommand(selectQuery, connection))
+                        {
+                            using (MySqlDataReader reader = command.ExecuteReader())
+                            {
+                                while (reader.Read())
+                                {
+                                    League league = new League(
+                                    Convert.ToInt32(reader["LeagueID"]),
+                                    reader["LeagueName"].ToString()
+                                    );
+                                    leagues.Add(league);
+
+                                }
+                                reader.Close();
+                                return leagues;
+                            }
+                        }
+                    }
+                }
+                finally
+                {
+                    dbConnection.CloseConnection();
+                }
+            }
+            else
+            {
+                Console.WriteLine("Failed to open the database connection.");
+            }
+            throw new Exception("Failed to get league from the database.");
         }
 
         public void AddTeam(Team team)

@@ -123,6 +123,18 @@ namespace ConsoleApp1
         public int YellowCards { get => _yellowCards; private set => _yellowCards = value; }
         public int RedCards { get => _redCards; private set => _redCards = value; }
 
+        public Player(string firstName, string lastName, Team team)
+        {
+            FirstName = firstName;
+            LastName = lastName;
+            Team = team;
+            if (AddToDatabase(new DatabaseConnection()))
+            {
+                team.AddPlayer(this);
+            }
+            else { throw new Exception("Failed to add player to the database."); }
+        }
+
         public Player(string firstName, string lastName, int age, int kitNumber, int positionKey, Team team)
         {
             FirstName = firstName;
@@ -145,16 +157,19 @@ namespace ConsoleApp1
             else { throw new Exception("Failed to add player to the database."); }
         }
 
-        public Player(string firstName, string lastName, Team team)
+        public Player(int playerID, string firstName, string lastName, int age, int kitNumber, string position, int goalsScored, int assists, int cleanSheets, int yellowCards, int redCards)
         {
+            PlayerID = playerID;
             FirstName = firstName;
             LastName = lastName;
-            Team = team;
-            if (AddToDatabase(new DatabaseConnection()))
-            {
-                team.AddPlayer(this);
-            }
-            else { throw new Exception("Failed to add player to the database."); }
+            Age = age;
+            KitNumber = kitNumber;
+            Position = position;
+            GoalsScored = goalsScored;
+            Assists = assists;
+            CleanSheets = cleanSheets;
+            YellowCards = yellowCards;
+            RedCards = redCards;
         }
 
         private bool DoesKitNumberExistsInTeam(DatabaseConnection dbConnection)
@@ -199,14 +214,15 @@ namespace ConsoleApp1
                     {
                         using (MySqlConnection connection = dbConnection.GetConnection())
                         {
-                            string insertQuery = "INSERT INTO Players (PlayerFirstName, PlayerLastName, PlayerAge, PlayerKitNumber, TeamID, GoalsScored, Assists, CleanSheets, YellowCards, RedCards) " +
-                                "VALUES (@PlayerFirstName, @PlayerSurname, @PlayerAge, @PlayerKitNumber, @TeamID, @GoalsScored, @Assists, @CleanSheets, @YellowCards, @RedCards); SELECT LAST_INSERT_ID();";
+                            string insertQuery = "INSERT INTO Players (PlayerFirstName, PlayerLastName, PlayerAge, PlayerKitNumber, Position, TeamID, GoalsScored, Assists, CleanSheets, YellowCards, RedCards) " +
+                                "VALUES (@PlayerFirstName, @PlayerSurname, @PlayerAge, @PlayerKitNumber, @Position, @TeamID, @GoalsScored, @Assists, @CleanSheets, @YellowCards, @RedCards); SELECT LAST_INSERT_ID();";
                             using (MySqlCommand command = new MySqlCommand(insertQuery, connection))
                             {
                                 command.Parameters.AddWithValue("@PlayerFirstName", FirstName);
                                 command.Parameters.AddWithValue("@PlayerSurname", LastName);
                                 command.Parameters.AddWithValue("@PlayerAge", Age);
                                 command.Parameters.AddWithValue("@PlayerKitNumber", KitNumber);
+                                command.Parameters.AddWithValue("@Position", Position);
                                 command.Parameters.AddWithValue("@TeamID", Team.TeamID);
                                 command.Parameters.AddWithValue("@GoalsScored", GoalsScored);
                                 command.Parameters.AddWithValue("@Assists", Assists);
@@ -243,6 +259,108 @@ namespace ConsoleApp1
             }
         }
 
+        public static Player GetPlayerFromDatabase(int kitNumber, int teamID, DatabaseConnection dbConnection)
+        {
+            if (dbConnection.OpenConnection())
+            {
+                try
+                {
+                    using (MySqlConnection connection = dbConnection.GetConnection())
+                    {
+                        string selectQuery = $"SELECT * FROM Players WHERE PlayerKitNumber = {kitNumber};";
+                        using (MySqlCommand command = new MySqlCommand(selectQuery, connection))
+                        {
+                            using (MySqlDataReader reader = command.ExecuteReader())
+                            {
+                                if (reader.Read())
+                                {
+                                    Player player = new Player(
+                                        Convert.ToInt32(reader["PlayerID"]),
+                                        reader["FirstName"].ToString(),
+                                        reader["LastName"].ToString(),
+                                        Convert.ToInt32(reader["Age"]),
+                                        kitNumber,
+                                        reader["Position"].ToString(),
+                                        Convert.ToInt32(reader["GoalsScored"]),
+                                        Convert.ToInt32(reader["Assists"]),
+                                        Convert.ToInt32(reader["CleanSheets"]),
+                                        Convert.ToInt32(reader["YellowCards"]),
+                                        Convert.ToInt32(reader["RedCards"])
+                                    );
+
+                                    return player;
+                                }
+                            }
+                        }
+                    }
+                }
+                finally
+                {
+                    dbConnection.CloseConnection();
+                }
+            }
+            else
+            {
+                Console.WriteLine("Failed to open the database connection.");
+            }
+            throw new Exception("Failed to get player from the database.");
+        }
+
+        public static List<Player> GetAllPlayersForTeamFromDatabase(int teamID, DatabaseConnection dbConnection)
+        {
+            List<Player> players = new List<Player>();
+            if (dbConnection.OpenConnection())
+            {
+                try
+                {
+                    using (MySqlConnection connection = dbConnection.GetConnection())
+                    {
+                        string selectQuery = $"SELECT * FROM Players WHERE TeamID = {teamID};";
+                        using (MySqlCommand command = new MySqlCommand(selectQuery, connection))
+                        {
+                            using (MySqlDataReader reader = command.ExecuteReader())
+                            {
+                                while (reader.Read())
+                                {
+                                    Player player = new Player(
+                                        Convert.ToInt32(reader["PlayerID"]),
+                                        reader["PlayerFirstName"].ToString(),
+                                        reader["PlayerLastName"].ToString(),
+                                        Convert.ToInt32(reader["PlayerAge"]),
+                                        Convert.ToInt32(reader["PlayerKitNumber"]),
+                                        reader["Position"].ToString(),
+                                        Convert.ToInt32(reader["GoalsScored"]),
+                                        Convert.ToInt32(reader["Assists"]),
+                                        Convert.ToInt32(reader["CleanSheets"]),
+                                        Convert.ToInt32(reader["YellowCards"]),
+                                        Convert.ToInt32(reader["RedCards"])
+                                    );
+                                    players.Add(player);
+
+                                }
+                                reader.Close();
+                                return players;
+                            }
+                        }
+                    }
+                }
+                finally
+                {
+                    dbConnection.CloseConnection();
+                }
+            }
+            else
+            {
+                Console.WriteLine("Failed to open the database connection.");
+            }
+            throw new Exception("Failed to get player from the database.");
+        }
+
+        public static Player GetPlayerFromDatabase(int playerID, DatabaseConnection dbConnection)
+        {
+            // TODO
+        }
+
         private bool IsValidName(string name)
         {
             if (string.IsNullOrEmpty(name) || name.Length == 0)
@@ -263,11 +381,31 @@ namespace ConsoleApp1
             }
         }
 
-        public void ScoreGoal(int amount) => AddStatistic(0, amount);
-        public void AssistGoal(int amount) => AddStatistic(1, amount);
-        public void CleanSheet(int amount) => AddStatistic(2, amount);
-        public void YellowCard(int amount) => AddStatistic(3, amount);
-        public void RedCard(int amount) => AddStatistic(3, amount);
+        public void ScoreGoal(int amount)
+        {
+            GoalsScored += amount;
+            AddStatistic(0, amount);
+        }
+        public void AssistGoal(int amount)
+        {
+            Assists += amount;
+            AddStatistic(1, amount);
+        }
+        public void CleanSheet(int amount)
+        {
+            CleanSheets += amount;
+            AddStatistic(2, amount);
+        }
+        public void YellowCard(int amount)
+        {
+            YellowCards += amount;
+            AddStatistic(3, amount);
+        }
+        public void RedCard(int amount)
+        {
+            RedCards += amount;
+            AddStatistic(4, amount);
+        }
 
         public void AddStatistic(int index, int amount)
         {
@@ -281,12 +419,12 @@ namespace ConsoleApp1
                 {
                     using (MySqlConnection connection = dbConnection.GetConnection())
                     {
-                        string updateQuery = "UPDATE Players SET @Stat = @Stat + @Amount WHERE PlayerID = @PlayerID;";
+                        string columnName = stats[index];
+                        string updateQuery = $"UPDATE Players SET {columnName} = {columnName} + {amount} WHERE PlayerID = @PlayerID;";
                         using (MySqlCommand command = new MySqlCommand(updateQuery, connection))
                         {
-                            command.Parameters.AddWithValue("@Stat", stats[index]);
-                            command.Parameters.AddWithValue("@Amount", amount);
                             command.Parameters.AddWithValue("@PlayerID", PlayerID);
+                            command.ExecuteNonQuery();
                         }
                     }
                 }
