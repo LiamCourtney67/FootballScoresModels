@@ -46,7 +46,8 @@ namespace ConsoleApp1
         public Team(int teamID, string name, int leagueID, int gamesPlayed, int gamesWon, int gamesDrawn, int gamesLost, int goalsFor, int goalsAgainst, int goalDifference, int points)
         {
             this.TeamID = teamID;
-            this.League = League.GetLeagueFromDatabase(leagueID, new DatabaseConnection());
+            LeagueService leagueService = new LeagueService(new DatabaseConnection());
+            this.League = leagueService.GetLeague(leagueID);
             this.Name = name;
             this.Players = Player.GetAllPlayersForTeamFromDatabase(this, new DatabaseConnection());
             this.GamesPlayed = gamesPlayed;

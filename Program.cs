@@ -43,9 +43,9 @@ namespace ConsoleApp1
 
         public static void TestLeaguePull()
         {
-            DatabaseConnection dbConnection = new DatabaseConnection();
+            LeagueService leagueService = new LeagueService(new DatabaseConnection());
 
-            League league = League.GetLeagueFromDatabase(1, dbConnection);
+            League league = leagueService.GetLeague(1);
 
             Console.WriteLine($"League: {league.Name}");
 
@@ -57,8 +57,7 @@ namespace ConsoleApp1
                 {
                     Console.WriteLine($"FirstName: {player.FirstName}, LastName: {player.LastName}, Age: {player.Age}, KitNumber: {player.KitNumber}, Position: {player.Position}, GoalsScored: {player.GoalsScored}, Assists: {player.Assists}, CleanSheets: {player.CleanSheets}, YellowCards: {player.YellowCards}, RedCards: {player.RedCards}");
                 }
-                List<Match> matches = Match.GetAllMatchesForLeagueFromDatabase(league, dbConnection);
-                foreach (Match match in matches)
+                foreach (Match match in team.Matches)
                 {
                     Console.WriteLine($"Match: {match.HomeTeam.Name} {match.HomeGoals} - {match.AwayGoals} {match.AwayTeam.Name} Result: {match.Result}");
                 }
@@ -67,9 +66,9 @@ namespace ConsoleApp1
 
         public static void TestPull()
         {
-            DatabaseConnection dbConnection = new DatabaseConnection();
+            LeagueService leagueService = new LeagueService(new DatabaseConnection());
 
-            List<League> leagues = League.GetAllLeaguesFromDatabase(dbConnection);
+            List<League> leagues = leagueService.GetAllLeagues();
             foreach (League league in leagues)
             {
                 Console.WriteLine($"League: {league.Name}");
@@ -100,8 +99,9 @@ namespace ConsoleApp1
         {
             ClearDatabase();
             Console.WriteLine("Database Cleared");
+            LeagueService leagueService = new LeagueService(new DatabaseConnection());
 
-            League dundeeLeague = new League("Dundee League");
+            League dundeeLeague = leagueService.CreateLeague("Dundee League");
 
             Team douglas = new Team("Douglas", dundeeLeague);
             Team fintry = new Team("Fintry", dundeeLeague);
@@ -125,7 +125,7 @@ namespace ConsoleApp1
             Match douglasVsFintry = new Match(douglas, fintry, date, 3, 1, douglasVsFintryScorers, douglasVsFintryAssisters);
             Match ferryVsLochee = new Match(ferry, lochee, date, 1, 2);
 
-            League angusLeague = new League("Angus League");
+            League angusLeague = leagueService.CreateLeague("Angus League");
 
             Team arbroath = new Team("Arbroath", angusLeague);
             Team brechin = new Team("Brechin", angusLeague);
