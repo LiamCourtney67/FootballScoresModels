@@ -60,6 +60,7 @@ namespace ConsoleApp1
             this.Result = CalculateResult();
             HomeTeam.League.SortTeams();
             HomeTeam.League.AddMatch(this);
+            HomeTeam.League.SortMatches();
 
             if (HomeTeam.League.LeagueID == AwayTeam.League.LeagueID)
             {
@@ -267,51 +268,6 @@ namespace ConsoleApp1
             }
             throw new Exception("Failed to get match from the database.");
         }
-
-        //public static Match GetMatchFromDatabase(int matchID, DatabaseConnection dbConnection)
-        //{
-        //    if (dbConnection.OpenConnection())
-        //    {
-        //        try
-        //        {
-        //            using (MySqlConnection connection = dbConnection.GetConnection())
-        //            {
-        //                string selectQuery = $"SELECT * FROM Matches WHERE MatchID = {matchID};";
-        //                using (MySqlCommand command = new MySqlCommand(selectQuery, connection))
-        //                {
-        //                    using (MySqlDataReader reader = command.ExecuteReader())
-        //                    {
-        //                        if (reader.Read())
-        //                        {
-        //                            Match match = new Match(
-        //                                Convert.ToInt32(reader["MatchID"]),
-        //                                Convert.ToInt32(reader["HomeTeamID"]),
-        //                                Convert.ToInt32(reader["AwayTeamID"]),
-        //                                Convert.ToDateTime(reader["DatePlayed"]),
-        //                                Convert.ToInt32(reader["HomeGoals"]),
-        //                                Convert.ToInt32(reader["AwayGoals"]),
-        //                                reader["Result"].ToString()
-        //                            );
-        //                            reader.Close();
-        //                            return match;
-        //                        }
-        //                        reader.Close();
-        //                        return null;
-        //                    }
-        //                }
-        //            }
-        //        }
-        //        finally
-        //        {
-        //            dbConnection.CloseConnection();
-        //        }
-        //    }
-        //    else
-        //    {
-        //        Console.WriteLine("Failed to open the database connection.");
-        //        return null;
-        //    }
-        //}
 
         private string CalculateResult()
         {

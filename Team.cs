@@ -160,55 +160,6 @@ namespace ConsoleApp1
             }
         }
 
-        //public static Team GetTeamFromDatabase(int teamID, DatabaseConnection dbConnection)
-        //{
-        //    if (dbConnection.OpenConnection())
-        //    {
-        //        try
-        //        {
-        //            using (MySqlConnection connection = dbConnection.GetConnection())
-        //            {
-        //                string selectQuery = $"SELECT * FROM Teams WHERE TeamID = {teamID};";
-        //                using (MySqlCommand command = new MySqlCommand(selectQuery, connection))
-        //                {
-        //                    using (MySqlDataReader reader = command.ExecuteReader())
-        //                    {
-        //                        if (reader.Read())
-        //                        {
-        //                            Team team = new Team(
-        //                                Convert.ToInt32(reader["TeamID"]),
-        //                                reader["TeamName"].ToString(),
-        //                                Convert.ToInt32(reader["LeagueID"]),
-        //                                Convert.ToInt32(reader["GamesPlayed"]),
-        //                                Convert.ToInt32(reader["GamesWon"]),
-        //                                Convert.ToInt32(reader["GamesDrawn"]),
-        //                                Convert.ToInt32(reader["GamesLost"]),
-        //                                Convert.ToInt32(reader["GoalsFor"]),
-        //                                Convert.ToInt32(reader["GoalsAgainst"]),
-        //                                Convert.ToInt32(reader["GoalDifference"]),
-        //                                Convert.ToInt32(reader["Points"])
-        //                            );
-        //                            reader.Close();
-        //                            return team;
-        //                        }
-        //                        reader.Close();
-        //                        return null;
-        //                    }
-        //                }
-        //            }
-        //        }
-        //        finally
-        //        {
-        //            dbConnection.CloseConnection();
-        //        }
-        //    }
-        //    else
-        //    {
-        //        Console.WriteLine("Failed to open the database connection.");
-        //        return null;
-        //    }
-        //}
-
         public static List<Team> GetAllTeamsForLeagueFromDatabase(League league, DatabaseConnection dbConnection)
         {
             List<Team> teams = new List<Team>();

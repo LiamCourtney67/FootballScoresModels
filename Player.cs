@@ -261,53 +261,6 @@ namespace ConsoleApp1
             }
         }
 
-        //public static Player GetPlayerFromDatabase(int kitNumber, int teamID, DatabaseConnection dbConnection)
-        //{
-        //    if (dbConnection.OpenConnection())
-        //    {
-        //        try
-        //        {
-        //            using (MySqlConnection connection = dbConnection.GetConnection())
-        //            {
-        //                string selectQuery = $"SELECT * FROM Players WHERE PlayerKitNumber = {kitNumber};";
-        //                using (MySqlCommand command = new MySqlCommand(selectQuery, connection))
-        //                {
-        //                    using (MySqlDataReader reader = command.ExecuteReader())
-        //                    {
-        //                        if (reader.Read())
-        //                        {
-        //                            Player player = new Player(
-        //                                Convert.ToInt32(reader["PlayerID"]),
-        //                                reader["FirstName"].ToString(),
-        //                                reader["LastName"].ToString(),
-        //                                Convert.ToInt32(reader["Age"]),
-        //                                kitNumber,
-        //                                reader["Position"].ToString(),
-        //                                Convert.ToInt32(reader["GoalsScored"]),
-        //                                Convert.ToInt32(reader["Assists"]),
-        //                                Convert.ToInt32(reader["CleanSheets"]),
-        //                                Convert.ToInt32(reader["YellowCards"]),
-        //                                Convert.ToInt32(reader["RedCards"])
-        //                            );
-
-        //                            return player;
-        //                        }
-        //                    }
-        //                }
-        //            }
-        //        }
-        //        finally
-        //        {
-        //            dbConnection.CloseConnection();
-        //        }
-        //    }
-        //    else
-        //    {
-        //        Console.WriteLine("Failed to open the database connection.");
-        //    }
-        //    throw new Exception("Failed to get player from the database.");
-        //}
-
         public static List<Player> GetAllPlayersForTeamFromDatabase(Team team, DatabaseConnection dbConnection)
         {
             List<Player> players = new List<Player>();
@@ -358,55 +311,6 @@ namespace ConsoleApp1
             }
             throw new Exception("Failed to get player from the database.");
         }
-
-        //public static Player GetPlayerFromDatabase(int playerID, DatabaseConnection dbConnection)
-        //{
-        //    if (dbConnection.OpenConnection())
-        //    {
-        //        try
-        //        {
-        //            using (MySqlConnection connection = dbConnection.GetConnection())
-        //            {
-        //                string selectQuery = $"SELECT * FROM Players WHERE PlayerID = {playerID};";
-        //                using (MySqlCommand command = new MySqlCommand(selectQuery, connection))
-        //                {
-        //                    using (MySqlDataReader reader = command.ExecuteReader())
-        //                    {
-        //                        if (reader.Read())
-        //                        {
-        //                            Player player = new Player(
-        //                                Convert.ToInt32(reader["PlayerID"]),
-        //                                reader["PlayerFirstName"].ToString(),
-        //                                reader["PlayerLastName"].ToString(),
-        //                                Convert.ToInt32(reader["PlayerAge"]),
-        //                                Convert.ToInt32(reader["PlayerKitNumber"]),
-        //                                reader["Position"].ToString(),
-        //                                Convert.ToInt32(reader["GoalsScored"]),
-        //                                Convert.ToInt32(reader["Assists"]),
-        //                                Convert.ToInt32(reader["CleanSheets"]),
-        //                                Convert.ToInt32(reader["YellowCards"]),
-        //                                Convert.ToInt32(reader["RedCards"])
-        //                            );
-        //                            reader.Close();
-        //                            return player;
-        //                        }
-        //                        reader.Close();
-        //                        return null;
-        //                    }
-        //                }
-        //            }
-        //        }
-        //        finally
-        //        {
-        //            dbConnection.CloseConnection();
-        //        }
-        //    }
-        //    else
-        //    {
-        //        Console.WriteLine("Failed to open the database connection.");
-        //        return null;
-        //    }
-        //}
 
         private bool IsValidName(string name)
         {
