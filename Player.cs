@@ -125,9 +125,9 @@ namespace ConsoleApp1
 
         public Player(string firstName, string lastName, Team team)
         {
-            FirstName = firstName;
-            LastName = lastName;
-            Team = team;
+            this.FirstName = firstName;
+            this.LastName = lastName;
+            this.Team = team;
             if (AddToDatabase(new DatabaseConnection()))
             {
                 team.AddPlayer(this);
@@ -137,19 +137,20 @@ namespace ConsoleApp1
 
         public Player(string firstName, string lastName, int age, int kitNumber, int positionKey, Team team)
         {
-            FirstName = firstName;
-            LastName = lastName;
-            Age = age;
-            KitNumber = kitNumber;
+            this.FirstName = firstName;
+            this.LastName = lastName;
+            this.Age = age;
+            this.KitNumber = kitNumber;
+            this.Team = team;
+
             if (_positionsContainer.TryGetValue(positionKey, out string position))
             {
-                Position = position;
+                this.Position = position;
             }
             else
             {
                 throw new ArgumentException("Invalid positionKey, must be 1-4");
             }
-            Team = team;
             if (AddToDatabase(new DatabaseConnection()))
             {
                 team.AddPlayer(this);
@@ -157,19 +158,20 @@ namespace ConsoleApp1
             else { throw new Exception("Failed to add player to the database."); }
         }
 
-        public Player(int playerID, string firstName, string lastName, int age, int kitNumber, string position, int goalsScored, int assists, int cleanSheets, int yellowCards, int redCards)
+        public Player(int playerID, string firstName, string lastName, int age, int kitNumber, string position, Team team, int goalsScored, int assists, int cleanSheets, int yellowCards, int redCards)
         {
-            PlayerID = playerID;
-            FirstName = firstName;
-            LastName = lastName;
-            Age = age;
-            KitNumber = kitNumber;
-            Position = position;
-            GoalsScored = goalsScored;
-            Assists = assists;
-            CleanSheets = cleanSheets;
-            YellowCards = yellowCards;
-            RedCards = redCards;
+            this.PlayerID = playerID;
+            this.FirstName = firstName;
+            this.LastName = lastName;
+            this.Age = age;
+            this.KitNumber = kitNumber;
+            this.Position = position;
+            this.Team = team;
+            this.GoalsScored = goalsScored;
+            this.Assists = assists;
+            this.CleanSheets = cleanSheets;
+            this.YellowCards = yellowCards;
+            this.RedCards = redCards;
         }
 
         private bool DoesKitNumberExistsInTeam(DatabaseConnection dbConnection)
@@ -259,54 +261,54 @@ namespace ConsoleApp1
             }
         }
 
-        public static Player GetPlayerFromDatabase(int kitNumber, int teamID, DatabaseConnection dbConnection)
-        {
-            if (dbConnection.OpenConnection())
-            {
-                try
-                {
-                    using (MySqlConnection connection = dbConnection.GetConnection())
-                    {
-                        string selectQuery = $"SELECT * FROM Players WHERE PlayerKitNumber = {kitNumber};";
-                        using (MySqlCommand command = new MySqlCommand(selectQuery, connection))
-                        {
-                            using (MySqlDataReader reader = command.ExecuteReader())
-                            {
-                                if (reader.Read())
-                                {
-                                    Player player = new Player(
-                                        Convert.ToInt32(reader["PlayerID"]),
-                                        reader["FirstName"].ToString(),
-                                        reader["LastName"].ToString(),
-                                        Convert.ToInt32(reader["Age"]),
-                                        kitNumber,
-                                        reader["Position"].ToString(),
-                                        Convert.ToInt32(reader["GoalsScored"]),
-                                        Convert.ToInt32(reader["Assists"]),
-                                        Convert.ToInt32(reader["CleanSheets"]),
-                                        Convert.ToInt32(reader["YellowCards"]),
-                                        Convert.ToInt32(reader["RedCards"])
-                                    );
+        //public static Player GetPlayerFromDatabase(int kitNumber, int teamID, DatabaseConnection dbConnection)
+        //{
+        //    if (dbConnection.OpenConnection())
+        //    {
+        //        try
+        //        {
+        //            using (MySqlConnection connection = dbConnection.GetConnection())
+        //            {
+        //                string selectQuery = $"SELECT * FROM Players WHERE PlayerKitNumber = {kitNumber};";
+        //                using (MySqlCommand command = new MySqlCommand(selectQuery, connection))
+        //                {
+        //                    using (MySqlDataReader reader = command.ExecuteReader())
+        //                    {
+        //                        if (reader.Read())
+        //                        {
+        //                            Player player = new Player(
+        //                                Convert.ToInt32(reader["PlayerID"]),
+        //                                reader["FirstName"].ToString(),
+        //                                reader["LastName"].ToString(),
+        //                                Convert.ToInt32(reader["Age"]),
+        //                                kitNumber,
+        //                                reader["Position"].ToString(),
+        //                                Convert.ToInt32(reader["GoalsScored"]),
+        //                                Convert.ToInt32(reader["Assists"]),
+        //                                Convert.ToInt32(reader["CleanSheets"]),
+        //                                Convert.ToInt32(reader["YellowCards"]),
+        //                                Convert.ToInt32(reader["RedCards"])
+        //                            );
 
-                                    return player;
-                                }
-                            }
-                        }
-                    }
-                }
-                finally
-                {
-                    dbConnection.CloseConnection();
-                }
-            }
-            else
-            {
-                Console.WriteLine("Failed to open the database connection.");
-            }
-            throw new Exception("Failed to get player from the database.");
-        }
+        //                            return player;
+        //                        }
+        //                    }
+        //                }
+        //            }
+        //        }
+        //        finally
+        //        {
+        //            dbConnection.CloseConnection();
+        //        }
+        //    }
+        //    else
+        //    {
+        //        Console.WriteLine("Failed to open the database connection.");
+        //    }
+        //    throw new Exception("Failed to get player from the database.");
+        //}
 
-        public static List<Player> GetAllPlayersForTeamFromDatabase(int teamID, DatabaseConnection dbConnection)
+        public static List<Player> GetAllPlayersForTeamFromDatabase(Team team, DatabaseConnection dbConnection)
         {
             List<Player> players = new List<Player>();
             if (dbConnection.OpenConnection())
@@ -315,7 +317,7 @@ namespace ConsoleApp1
                 {
                     using (MySqlConnection connection = dbConnection.GetConnection())
                     {
-                        string selectQuery = $"SELECT * FROM Players WHERE TeamID = {teamID};";
+                        string selectQuery = $"SELECT * FROM Players WHERE TeamID = {team.TeamID};";
                         using (MySqlCommand command = new MySqlCommand(selectQuery, connection))
                         {
                             using (MySqlDataReader reader = command.ExecuteReader())
@@ -329,6 +331,7 @@ namespace ConsoleApp1
                                         Convert.ToInt32(reader["PlayerAge"]),
                                         Convert.ToInt32(reader["PlayerKitNumber"]),
                                         reader["Position"].ToString(),
+                                        team,
                                         Convert.ToInt32(reader["GoalsScored"]),
                                         Convert.ToInt32(reader["Assists"]),
                                         Convert.ToInt32(reader["CleanSheets"]),
@@ -356,10 +359,54 @@ namespace ConsoleApp1
             throw new Exception("Failed to get player from the database.");
         }
 
-        public static Player GetPlayerFromDatabase(int playerID, DatabaseConnection dbConnection)
-        {
-            // TODO
-        }
+        //public static Player GetPlayerFromDatabase(int playerID, DatabaseConnection dbConnection)
+        //{
+        //    if (dbConnection.OpenConnection())
+        //    {
+        //        try
+        //        {
+        //            using (MySqlConnection connection = dbConnection.GetConnection())
+        //            {
+        //                string selectQuery = $"SELECT * FROM Players WHERE PlayerID = {playerID};";
+        //                using (MySqlCommand command = new MySqlCommand(selectQuery, connection))
+        //                {
+        //                    using (MySqlDataReader reader = command.ExecuteReader())
+        //                    {
+        //                        if (reader.Read())
+        //                        {
+        //                            Player player = new Player(
+        //                                Convert.ToInt32(reader["PlayerID"]),
+        //                                reader["PlayerFirstName"].ToString(),
+        //                                reader["PlayerLastName"].ToString(),
+        //                                Convert.ToInt32(reader["PlayerAge"]),
+        //                                Convert.ToInt32(reader["PlayerKitNumber"]),
+        //                                reader["Position"].ToString(),
+        //                                Convert.ToInt32(reader["GoalsScored"]),
+        //                                Convert.ToInt32(reader["Assists"]),
+        //                                Convert.ToInt32(reader["CleanSheets"]),
+        //                                Convert.ToInt32(reader["YellowCards"]),
+        //                                Convert.ToInt32(reader["RedCards"])
+        //                            );
+        //                            reader.Close();
+        //                            return player;
+        //                        }
+        //                        reader.Close();
+        //                        return null;
+        //                    }
+        //                }
+        //            }
+        //        }
+        //        finally
+        //        {
+        //            dbConnection.CloseConnection();
+        //        }
+        //    }
+        //    else
+        //    {
+        //        Console.WriteLine("Failed to open the database connection.");
+        //        return null;
+        //    }
+        //}
 
         private bool IsValidName(string name)
         {

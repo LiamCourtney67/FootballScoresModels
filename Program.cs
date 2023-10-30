@@ -6,112 +6,11 @@ namespace ConsoleApp1
     {
         static void Main(string[] args)
         {
-            DatabaseConnection dbConnection = new DatabaseConnection();
+            //TestPush();
+            TestPull();
+            Console.WriteLine();
 
-            List<League> leagues = League.GetAllLeaguesFromDatabase(dbConnection);
-            foreach (League league in leagues)
-            {
-                Console.WriteLine($"League: {league.Name}");
-            }
-            foreach (League league in leagues)
-            {
-                foreach (Team team in league.Teams)
-                {
-                    Console.WriteLine($"Team: {team.Name}, Points: {team.Points} GD: {team.GoalDifference}");
-                }
-            }
-            foreach (League league in leagues)
-            {
-                foreach (Team team in league.Teams)
-                {
-                    foreach (Player player in team.Players)
-                    {
-                        Console.WriteLine($"Player: {player.FirstName} {player.LastName}, Goals: {player.GoalsScored}, Assists: {player.Assists}");
-                    }
-                }
-            }
-
-            List<Match> matches = Match.GetAllMatchesFromDatabase(dbConnection);
-            foreach (Match match in matches)
-            {
-                Console.WriteLine($"Match: {match.HomeTeam.Name} {match.HomeGoals} - {match.AwayGoals} {match.AwayTeam.Name}");
-            }
-
-            Team douglas = Team.GetTeamFromDatabase(5, dbConnection);
-            Team fintry = Team.GetTeamFromDatabase(6, dbConnection);
-            Team ferry = Team.GetTeamFromDatabase(7, dbConnection);
-            Team lochee = Team.GetTeamFromDatabase(8, dbConnection);
-
-            Console.WriteLine($"Team: {douglas.Name}, Points: {douglas.Points} GD: {douglas.GoalDifference}");
-            Console.WriteLine($"Team: {fintry.Name}, Points: {fintry.Points} GD: {fintry.GoalDifference}");
-            Console.WriteLine($"Team: {ferry.Name}, Points: {ferry.Points} GD: {ferry.GoalDifference}");
-            Console.WriteLine($"Team: {lochee.Name}, Points: {lochee.Points} GD: {lochee.GoalDifference}");
-
-            //League dundeeLeague = League.GetLeagueFromDatabase(15, dbConnection);
-            //Team douglas = Team.GetTeamFromDatabase(49, dbConnection);
-            //Team fintry = Team.GetTeamFromDatabase(50, dbConnection);
-            //Team ferry = Team.GetTeamFromDatabase(51, dbConnection);
-            //Team lochee = Team.GetTeamFromDatabase(52, dbConnection);
-
-            //foreach (Team team in dundeeLeague.Teams)
-            //{
-            //    Console.WriteLine($"Team: {team.Name}, Points: {team.Points} GD: {team.GoalDifference}");
-            //}
-
-            //Player johnSmith = Player.GetPlayerFromDatabase(41, dbConnection);
-            //Player daveSmith = Player.GetPlayerFromDatabase(42, dbConnection);
-            //Player bobSmith = Player.GetPlayerFromDatabase(43, dbConnection);
-            //Player eoinSmith = Player.GetPlayerFromDatabase(44, dbConnection);
-
-            //Match douglasVsFerry = Match.GetMatchFromDatabase(32, dbConnection);
-            //Match fintryVsLochee = Match.GetMatchFromDatabase(33, dbConnection);
-            //Match douglasVsFintry = Match.GetMatchFromDatabase(34, dbConnection);
-            //Match ferryVsLochee = Match.GetMatchFromDatabase(35, dbConnection);
-
-
-
-
-            //ClearDatabase();
-            //Console.WriteLine("Database Cleared");
-
-            //League dundeeLeague = new League("Dundee League");
-
-            //Team douglas = new Team("Douglas", dundeeLeague);
-            //Team fintry = new Team("Fintry", dundeeLeague);
-            //Team ferry = new Team("Ferry", dundeeLeague);
-            //Team lochee = new Team("Lochee", dundeeLeague);
-
-            //Player johnSmith = new Player("John", "Smith", 25, 1, 1, douglas);
-            //Player daveSmith = new Player("Dave", "Smith", 25, 2, 2, douglas);
-            //Player bobSmith = new Player("Bob", "Smith", 25, 7, 3, douglas);
-            //Player eoinSmith = new Player("Eoin", "Smith", 25, 9, 4, douglas);
-
-            //List<Player> douglasVsFerryScorers = new List<Player> { bobSmith, eoinSmith };
-            //List<Player> douglasVsFerryAssisters = new List<Player> { daveSmith, bobSmith };
-
-            //List<Player> douglasVsFintryScorers = new List<Player> { bobSmith, eoinSmith, eoinSmith };
-            //List<Player> douglasVsFintryAssisters = new List<Player> { bobSmith, bobSmith, eoinSmith };
-            //DateTime date = DateTime.Now;
-
-            //Match douglasVsFerry = new Match(douglas, ferry, date, 2, 0, douglasVsFerryScorers, douglasVsFerryAssisters);
-            //Match fintryVsLochee = new Match(fintry, lochee, date, 1, 1);
-            //Match douglasVsFintry = new Match(douglas, fintry, date, 3, 1, douglasVsFintryScorers, douglasVsFintryAssisters);
-            //Match ferryVsLochee = new Match(ferry, lochee, date, 1, 2);
-
-            //foreach (Team team in dundeeLeague.Teams)
-            //{
-            //    Console.WriteLine($"Team: {team.Name}, Points: {team.Points} GD: {team.GoalDifference}");
-            //}
-
-            //foreach (Player player in douglas.Players)
-            //{
-            //    if (player.Position == "Goalkeeper" || player.Position == "Defender")
-            //        Console.WriteLine($"Player: {player.FirstName} {player.LastName}, Goals: {player.GoalsScored}, Assists: {player.Assists}, Clean Sheets: {player.CleanSheets}");
-
-            //    else
-            //        Console.WriteLine($"Player: {player.FirstName} {player.LastName}, Goals: {player.GoalsScored}, Assists: {player.Assists}");
-
-            //}
+            //TestLeaguePull();
         }
 
         public static void ClearDatabase()
@@ -140,6 +39,131 @@ namespace ConsoleApp1
             {
                 Console.WriteLine("Failed to open the database connection.");
             }
+        }
+
+        public static void TestLeaguePull()
+        {
+            DatabaseConnection dbConnection = new DatabaseConnection();
+
+            League league = League.GetLeagueFromDatabase(1, dbConnection);
+
+            Console.WriteLine($"League: {league.Name}");
+
+            foreach (Team team in league.Teams)
+            {
+                Console.WriteLine($"Name: {team.Name}, GamesPlayed: {team.GamesPlayed}, GamesWon: {team.GamesWon}, GamesDrawn: {team.GamesDrawn}, GamesLost: {team.GamesLost}, GoalsFor: {team.GoalsFor}, GoalsAgainst: {team.GoalsAgainst}, GoalDifference: {team.GoalDifference}, Points: {team.Points}");
+
+                foreach (Player player in team.Players)
+                {
+                    Console.WriteLine($"FirstName: {player.FirstName}, LastName: {player.LastName}, Age: {player.Age}, KitNumber: {player.KitNumber}, Position: {player.Position}, GoalsScored: {player.GoalsScored}, Assists: {player.Assists}, CleanSheets: {player.CleanSheets}, YellowCards: {player.YellowCards}, RedCards: {player.RedCards}");
+                }
+                List<Match> matches = Match.GetAllMatchesForLeagueFromDatabase(league, dbConnection);
+                foreach (Match match in matches)
+                {
+                    Console.WriteLine($"Match: {match.HomeTeam.Name} {match.HomeGoals} - {match.AwayGoals} {match.AwayTeam.Name} Result: {match.Result}");
+                }
+            }
+        }
+
+        public static void TestPull()
+        {
+            DatabaseConnection dbConnection = new DatabaseConnection();
+
+            List<League> leagues = League.GetAllLeaguesFromDatabase(dbConnection);
+            foreach (League league in leagues)
+            {
+                Console.WriteLine($"League: {league.Name}");
+
+                foreach (Team team in league.Teams)
+                {
+                    Console.WriteLine($"Name: {team.Name}, GamesPlayed: {team.GamesPlayed}, GamesWon: {team.GamesWon}, GamesDrawn: {team.GamesDrawn}, GamesLost: {team.GamesLost}, GoalsFor: {team.GoalsFor}, GoalsAgainst: {team.GoalsAgainst}, GoalDifference: {team.GoalDifference}, Points: {team.Points}");
+
+                    foreach (Player player in team.Players)
+                    {
+                        Console.WriteLine($"FirstName: {player.FirstName}, LastName: {player.LastName}, Age: {player.Age}, KitNumber: {player.KitNumber}, Position: {player.Position}, GoalsScored: {player.GoalsScored}, Assists: {player.Assists}, CleanSheets: {player.CleanSheets}, YellowCards: {player.YellowCards}, RedCards: {player.RedCards}");
+                    }
+
+                    foreach (Match match in team.Matches)
+                    {
+                        Console.WriteLine($"Match: {match.HomeTeam.Name} {match.HomeGoals} - {match.AwayGoals} {match.AwayTeam.Name} Result: {match.Result}");
+                    }
+                }
+
+                foreach (Match match in league.Matches)
+                {
+                    Console.WriteLine($"Match: {match.HomeTeam.Name} {match.HomeGoals} - {match.AwayGoals} {match.AwayTeam.Name} Result: {match.Result}");
+                }
+            }
+        }
+
+        public static void TestPush()
+        {
+            ClearDatabase();
+            Console.WriteLine("Database Cleared");
+
+            League dundeeLeague = new League("Dundee League");
+
+            Team douglas = new Team("Douglas", dundeeLeague);
+            Team fintry = new Team("Fintry", dundeeLeague);
+            Team ferry = new Team("Ferry", dundeeLeague);
+            Team lochee = new Team("Lochee", dundeeLeague);
+
+            Player johnSmith = new Player("John", "Smith", 25, 1, 1, douglas);
+            Player daveSmith = new Player("Dave", "Smith", 25, 2, 2, douglas);
+            Player bobSmith = new Player("Bob", "Smith", 25, 7, 3, douglas);
+            Player eoinSmith = new Player("Eoin", "Smith", 25, 9, 4, douglas);
+
+            List<Player> douglasVsFerryScorers = new List<Player> { bobSmith, eoinSmith };
+            List<Player> douglasVsFerryAssisters = new List<Player> { daveSmith, bobSmith };
+
+            List<Player> douglasVsFintryScorers = new List<Player> { bobSmith, eoinSmith, eoinSmith };
+            List<Player> douglasVsFintryAssisters = new List<Player> { bobSmith, bobSmith, eoinSmith };
+            DateTime date = DateTime.Now;
+
+            Match douglasVsFerry = new Match(douglas, ferry, date, 2, 0, douglasVsFerryScorers, douglasVsFerryAssisters);
+            Match fintryVsLochee = new Match(fintry, lochee, date, 1, 1);
+            Match douglasVsFintry = new Match(douglas, fintry, date, 3, 1, douglasVsFintryScorers, douglasVsFintryAssisters);
+            Match ferryVsLochee = new Match(ferry, lochee, date, 1, 2);
+
+            League angusLeague = new League("Angus League");
+
+            Team arbroath = new Team("Arbroath", angusLeague);
+            Team brechin = new Team("Brechin", angusLeague);
+            Team carnoustie = new Team("Carnoustie", angusLeague);
+            Team forfar = new Team("Forfar", angusLeague);
+
+            Player johnDoe = new Player("John", "Doe", 25, 1, 1, arbroath);
+            Player daveDoe = new Player("Dave", "Doe", 25, 2, 2, arbroath);
+            Player bobDoe = new Player("Bob", "Doe", 25, 7, 3, arbroath);
+            Player eoinDoe = new Player("Eoin", "Doe", 25, 9, 4, arbroath);
+
+            List<Player> arbroathVsBrechinScorers = new List<Player> { bobDoe, eoinDoe };
+            List<Player> arbroathVsBrechinAssisters = new List<Player> { daveDoe, bobDoe };
+
+            List<Player> arbroathVsCarnoustieScorers = new List<Player> { bobDoe, eoinDoe, eoinDoe };
+            List<Player> arbroathVsCarnoustieAssisters = new List<Player> { bobDoe, bobDoe, eoinDoe };
+
+            Match arbroathVsBrechin = new Match(arbroath, brechin, date, 2, 0, arbroathVsBrechinScorers, arbroathVsBrechinAssisters);
+            Match carnoustieVsForfar = new Match(carnoustie, forfar, date, 1, 1);
+            Match arbroathVsCarnoustie = new Match(arbroath, carnoustie, date, 3, 1, arbroathVsCarnoustieScorers, arbroathVsCarnoustieAssisters);
+            Match brechinVsForfar = new Match(brechin, forfar, date, 1, 2);
+
+            Console.WriteLine("Database Populated");
+
+            //foreach (Team team in dundeeLeague.Teams)
+            //{
+            //    Console.WriteLine($"Name: {team.Name}, GamesPlayed: {team.GamesPlayed}, GamesWon: {team.GamesWon}, GamesDrawn: {team.GamesDrawn}, GamesLost: {team.GamesLost}, GoalsFor: {team.GoalsFor}, GoalsAgainst: {team.GoalsAgainst}, GoalDifference: {team.GoalDifference}, Points: {team.Points}");
+            //}
+
+            //foreach (Player player in douglas.Players)
+            //{
+            //    if (player.Position == "Goalkeeper" || player.Position == "Defender")
+            //        Console.WriteLine($"FirstName: {player.FirstName}, LastName: {player.LastName}, Age: {player.Age}, KitNumber: {player.KitNumber}, Position: {player.Position}, GoalsScored: {player.GoalsScored}, Assists: {player.Assists}, CleanSheets: {player.CleanSheets}, YellowCards: {player.YellowCards}, RedCards: {player.RedCards}");
+
+            //    else
+            //        Console.WriteLine($"FirstName: {player.FirstName}, LastName: {player.LastName}, Age: {player.Age}, KitNumber: {player.KitNumber}, Position: {player.Position}, GoalsScored: {player.GoalsScored}, Assists: {player.Assists}, YellowCards: {player.YellowCards}, RedCards: {player.RedCards}");
+
+            //}
         }
     }
 }

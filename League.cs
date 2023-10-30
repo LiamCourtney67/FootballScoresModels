@@ -7,12 +7,14 @@ namespace ConsoleApp1
         private int _leagueID;
         private string _name;
         private List<Team> _teams = new List<Team>();
+        private List<Match> matches = new List<Match>();
         private Team _champions;
         private Team _relegated;
 
         public int LeagueID { get => _leagueID; private set => _leagueID = value; }
         public string Name { get => _name; set => _name = value; }
         public List<Team> Teams { get => _teams; set => _teams = value; }
+        public List<Match> Matches { get => matches; set => matches = value; }
         public Team Champions { get => _champions; set => _champions = value; }
         public Team Relegated { get => _relegated; set => _relegated = value; }
 
@@ -26,7 +28,8 @@ namespace ConsoleApp1
         {
             this.LeagueID = leagueID;
             this.Name = name;
-            this.Teams = Team.GetAllTeamsForLeagueFromDatabase(leagueID, new DatabaseConnection());
+            this.Teams = Team.GetAllTeamsForLeagueFromDatabase(this, new DatabaseConnection());
+            this.Matches = Match.GetAllMatchesForLeagueFromDatabase(this, new DatabaseConnection());
         }
 
         private bool DoesLeagueNameExists(DatabaseConnection dbConnection)
@@ -107,7 +110,42 @@ namespace ConsoleApp1
 
         public static League GetLeagueFromDatabase(int leagueID, DatabaseConnection dbConnection)
         {
-            // TODO
+            if (dbConnection.OpenConnection())
+            {
+                try
+                {
+                    using (MySqlConnection connection = dbConnection.GetConnection())
+                    {
+                        string selectQuery = $"SELECT * FROM Leagues WHERE LeagueID = {leagueID};";
+                        using (MySqlCommand command = new MySqlCommand(selectQuery, connection))
+                        {
+                            using (MySqlDataReader reader = command.ExecuteReader())
+                            {
+                                if (reader.Read())
+                                {
+                                    League league = new League(
+                                        Convert.ToInt32(reader["LeagueID"]),
+                                        reader["LeagueName"].ToString()
+                                    );
+                                    reader.Close();
+                                    return league;
+                                }
+                                reader.Close();
+                                return null;
+                            }
+                        }
+                    }
+                }
+                finally
+                {
+                    dbConnection.CloseConnection();
+                }
+            }
+            else
+            {
+                Console.WriteLine("Failed to open the database connection.");
+                return null;
+            }
         }
 
         public static List<League> GetAllLeaguesFromDatabase(DatabaseConnection dbConnection)
@@ -128,8 +166,8 @@ namespace ConsoleApp1
                                 while (reader.Read())
                                 {
                                     League league = new League(
-                                    Convert.ToInt32(reader["LeagueID"]),
-                                    reader["LeagueName"].ToString()
+                                        Convert.ToInt32(reader["LeagueID"]),
+                                        reader["LeagueName"].ToString()
                                     );
                                     leagues.Add(league);
 
@@ -162,6 +200,18 @@ namespace ConsoleApp1
         {
             Teams.Remove(team);
             team.League = null;
+        }
+
+        public void AddMatch(Match match)
+        {
+            Matches.Add(match);
+            match.League = this;
+        }
+
+        public void RemoveMatch(Match match)
+        {
+            Matches.Remove(match);
+            match.League = null;
         }
 
         public void SortTeams()
