@@ -23,10 +23,9 @@ public class DatabaseConnection
             }
             return true;
         }
-        catch (MySqlException ex)
+        catch (MySqlException e)
         {
-            Console.WriteLine("Error: " + ex.Message);
-            return false;
+            throw new Exception("Error: " + e.Message);
         }
     }
 
@@ -40,10 +39,9 @@ public class DatabaseConnection
             }
             return true;
         }
-        catch (MySqlException ex)
+        catch (MySqlException e)
         {
-            Console.WriteLine("Error: " + ex.Message);
-            return false;
+            throw new Exception("Error: " + e.Message);
         }
     }
 

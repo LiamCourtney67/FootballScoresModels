@@ -13,6 +13,9 @@ namespace ConsoleApp1
         private int _awayGoals;
         private string _result;
 
+        private PlayerService _playerService = new PlayerService(new DatabaseConnection());
+        private TeamService _teamService = new TeamService(new DatabaseConnection());
+
         public int MatchID { get => _matchID; private set => _matchID = value; }
         public Team HomeTeam { get => _homeTeam; private set => _homeTeam = value; }
         public Team AwayTeam { get => _awayTeam; private set => _awayTeam = value; }
@@ -288,44 +291,56 @@ namespace ConsoleApp1
         private void AssignPoints()
         {
             HomeTeam.GamesPlayed++;
-            AddStatistic(HomeTeam.TeamID, 0, 1);
+            _teamService.AddStatisticToDatabase(HomeTeam, "GamesPlayed");
 
             HomeTeam.GoalsFor += HomeGoals;
-            AddStatistic(HomeTeam.TeamID, 4, HomeGoals);
+            _teamService.AddStatisticToDatabase(HomeTeam, "GoalsFor");
 
             HomeTeam.GoalsAgainst += AwayGoals;
-            AddStatistic(HomeTeam.TeamID, 5, AwayGoals);
+            _teamService.AddStatisticToDatabase(HomeTeam, "GoalsAgainst");
 
             AwayTeam.GamesPlayed++;
-            AddStatistic(AwayTeam.TeamID, 0, 1);
+            _teamService.AddStatisticToDatabase(AwayTeam, "GamesPlayed");
 
             AwayTeam.GoalsFor += AwayGoals;
-            AddStatistic(AwayTeam.TeamID, 4, AwayGoals);
+            _teamService.AddStatisticToDatabase(AwayTeam, "GoalsFor");
 
             AwayTeam.GoalsAgainst += HomeGoals;
-            AddStatistic(AwayTeam.TeamID, 5, HomeGoals);
+            _teamService.AddStatisticToDatabase(AwayTeam, "GoalsAgainst");
 
             if (Result == "Home")
             {
                 HomeTeam.GamesWon++;
-                AddStatistic(HomeTeam.TeamID, 1, 1);
+                _teamService.AddStatisticToDatabase(HomeTeam, "GamesWon");
                 AwayTeam.GamesLost++;
-                AddStatistic(AwayTeam.TeamID, 3, 1);
+                _teamService.AddStatisticToDatabase(AwayTeam, "GamesLost");
             }
             else if (Result == "Draw")
             {
                 HomeTeam.GamesDrawn++;
-                AddStatistic(HomeTeam.TeamID, 2, 1);
+                _teamService.AddStatisticToDatabase(HomeTeam, "GamesDrawn");
                 AwayTeam.GamesDrawn++;
-                AddStatistic(AwayTeam.TeamID, 2, 1);
+                _teamService.AddStatisticToDatabase(AwayTeam, "GamesDrawn");
             }
             else if (Result == "Away")
             {
                 HomeTeam.GamesLost++;
-                AddStatistic(HomeTeam.TeamID, 3, 1);
+                _teamService.AddStatisticToDatabase(HomeTeam, "GamesLost");
                 AwayTeam.GamesWon++;
-                AddStatistic(AwayTeam.TeamID, 1, 1);
+                _teamService.AddStatisticToDatabase(AwayTeam, "GamesWon");
             }
+
+            HomeTeam.Points = (HomeTeam.GamesWon * 3) + HomeTeam.GamesDrawn;
+            _teamService.AddStatisticToDatabase(HomeTeam, "Points");
+
+            AwayTeam.Points = (AwayTeam.GamesWon * 3) + AwayTeam.GamesDrawn;
+            _teamService.AddStatisticToDatabase(AwayTeam, "Points");
+
+            HomeTeam.GoalDifference = HomeTeam.GoalsFor - HomeTeam.GoalsAgainst;
+            _teamService.AddStatisticToDatabase(HomeTeam, "GoalDifference");
+
+            AwayTeam.GoalDifference = AwayTeam.GoalsFor - AwayTeam.GoalsAgainst;
+            _teamService.AddStatisticToDatabase(AwayTeam, "GoalDifference");
         }
 
         private void CheckCleenSheets()
@@ -352,41 +367,10 @@ namespace ConsoleApp1
             }
         }
 
-        public void AddScorer(Player player, int amount) => player.ScoreGoal(amount);
-        public void AddAssit(Player player, int amount) => player.AssistGoal(amount);
-        public void AddCleanSheet(Player player, int amount) => player.CleanSheet(amount);
-        public void AddYellowCard(Player player, int amount) => player.YellowCard(amount);
-        public void AddRedCard(Player player, int amount) => player.RedCard(amount);
-
-        public void AddStatistic(int teamID, int index, int amount)
-        {
-            string[] stats = { "GamesPlayed", "GamesWon", "GamesDrawn", "GamesLost", "GoalsFor", "GoalsAgainst", "GoalDifference", "Points" };
-
-            DatabaseConnection dbConnection = new DatabaseConnection();
-
-            if (dbConnection.OpenConnection())
-            {
-                try
-                {
-                    using (MySqlConnection connection = dbConnection.GetConnection())
-                    {
-                        string columnName = stats[index];
-                        string updateQuery = $"UPDATE Teams SET {columnName} = {columnName} + {amount} WHERE TeamID = {teamID};";
-                        using (MySqlCommand command = new MySqlCommand(updateQuery, connection))
-                        {
-                            command.ExecuteNonQuery();
-                        }
-                    }
-                }
-                finally
-                {
-                    dbConnection.CloseConnection();
-                }
-            }
-            else
-            {
-                Console.WriteLine("Failed to open the database connection.");
-            }
-        }
+        public void AddScorer(Player player, int amount) { player.ScoreGoal(amount); _playerService.AddStatisticToDatabase(player, "GoalsScored"); }
+        public void AddAssit(Player player, int amount) { player.AssistGoal(amount); _playerService.AddStatisticToDatabase(player, "Assists"); }
+        public void AddCleanSheet(Player player, int amount) { player.CleanSheet(amount); _playerService.AddStatisticToDatabase(player, "CleanSheets"); }
+        public void AddYellowCard(Player player, int amount) { player.YellowCard(amount); _playerService.AddStatisticToDatabase(player, "YellowCards"); }
+        public void AddRedCard(Player player, int amount) { player.RedCard(amount); _playerService.AddStatisticToDatabase(player, "RedCards"); }
     }
 }

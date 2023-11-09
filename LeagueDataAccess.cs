@@ -13,13 +13,13 @@ namespace ConsoleApp1
             _dbConnection = dbConnection;
         }
 
-
         /// <summary>
         /// Checks if a league with the same name already exists in the database
         /// </summary>
-        /// <param name="dbConnection">Instance of DatabaseConnection</param>
-        /// <returns>True if a league with the same name exists, otherwise false</returns>
-        private bool DoesLeagueNameExists(string leagueName)
+        /// <param name="leagueName">The league name to be checked</param>
+        /// <returns>True if a team already exists with that name in the database or false if it doesn't</returns>
+        /// <exception cref="Exception"></exception>
+        private bool DoesLeagueNameExist(string leagueName)
         {
             try
             {
@@ -45,25 +45,27 @@ namespace ConsoleApp1
                         }
                         catch (MySqlException e)
                         {
-                            throw new Exception("Failed to check if the league name already exists in the database.", e);
+                            throw new Exception("Failed to check if the league name already exists in the database: " + e.Message + " " + e.InnerException);
                         }
                     }
                 }
             }
             catch (Exception e)
             {
-                throw new Exception("Failed to open the database connection: ", e);
+                throw new Exception("Failed to open the database connection: " + e.Message + " " + e.InnerException);
             }
         }
 
         /// <summary>
-        /// Adding an instance of the League class to the database
+        /// Adding a new league to the database
         /// </summary>
-        /// <param name="dbConnection">Instance of DatabaseConnection</param>
-        /// <returns>True if the League could be added, otherwise false</returns>
+        /// <param name="league">The league object to be added</param>
+        /// <returns>True if the league has been added to the database or an exception if it couldn't be added</returns>
+        /// <exception cref="Exception"></exception>
         public bool AddToDatabase(League league)
         {
-            if (DoesLeagueNameExists(league.Name))
+            // Check if a league with the same name already exists
+            if (DoesLeagueNameExist(league.Name))
             {
                 throw new Exception("A league with the same name already exists.");
             }
@@ -86,24 +88,18 @@ namespace ConsoleApp1
                         // Execute the SQL query and get the new league's ID
                         league.LeagueID = Convert.ToInt32(command.ExecuteScalar());
 
-                        if (league.LeagueID > 0)
-                        {
-                            return true;
-                        }
-                        else
-                        {
-                            throw new Exception("Failed to add the league to the database.");
-                        }
+                        // Return true if the league has been added to the database or throw an exception if it couldn't be added
+                        return league.LeagueID > 0 ? true : throw new Exception("Failed to add the league to the database.");
                     }
                 }
             }
             catch (MySqlException e)
             {
-                throw new Exception("Failed to execute the insert query or retrieve the LeagueID.", e);
+                throw new Exception("Failed to execute the insert query or retrieve the LeagueID: " +           );
             }
             catch (Exception e)
             {
-                throw new Exception("Failed to interact with the database.", e);
+                throw new Exception("Failed to interact with the database: " + e.Message + " " + e.InnerException);
             }
             finally
             {
@@ -116,7 +112,6 @@ namespace ConsoleApp1
         /// Get an individual league from the database.
         /// </summary>
         /// <param name="leagueID">LeagueID.</param>
-        /// <param name="dbConnection">Instance of DatabaseConnection.</param>
         /// <returns>An instance of the League class based on the database, or null if not found.</returns>
         public League GetLeagueFromDatabase(int leagueID)
         {
@@ -146,7 +141,7 @@ namespace ConsoleApp1
                                 // Create a League instance based on the database results.
                                 League league = new League(
                                     Convert.ToInt32(reader["LeagueID"]),
-                                    reader["LeagueName"]?.ToString()
+                                    reader["LeagueName"].ToString()
                                 );
 
                                 // Validate and return the league object.
@@ -159,7 +154,7 @@ namespace ConsoleApp1
             }
             catch (MySqlException e)
             {
-                throw new Exception("An error occurred while retrieving data from the database.", e);
+                throw new Exception("An error occurred while retrieving data from the database: " + e.Message + " " + e.InnerException);
             }
             finally
             {
@@ -172,7 +167,6 @@ namespace ConsoleApp1
         /// <summary>
         /// Retrieves all league records from the database.
         /// </summary>
-        /// <param name="dbConnection">An instance of the DatabaseConnection to manage database interactions.</param>
         /// <returns>A list of League instances populated with data from the database.</returns>
         public List<League> GetAllLeaguesFromDatabase()
         {
@@ -205,6 +199,7 @@ namespace ConsoleApp1
                                     reader["LeagueName"].ToString()
                                 );
 
+
                                 // Validate the league object (i.e., ensure it has a valid ID) and add it to the list.
                                 if (league.LeagueID > 0)
                                 {
@@ -215,6 +210,8 @@ namespace ConsoleApp1
                                     throw new Exception("A league retrieved from the database has an invalid ID.");
                                 }
                             }
+                            reader.Close();
+                            return leagues;
                         }
                     }
                 }
@@ -222,15 +219,13 @@ namespace ConsoleApp1
             catch (MySqlException e)
             {
                 // Handle any MySQL-specific exceptions that might arise during database operations.
-                throw new Exception("An error occurred while retrieving leagues from the database.", e);
+                throw new Exception("An error occurred while retrieving leagues from the database: " + e.Message + " " + e.InnerException);
             }
             finally
             {
                 // Ensure the database connection is closed after the operation.
                 DBConnection.CloseConnection();
             }
-
-            return leagues;
         }
     }
 }

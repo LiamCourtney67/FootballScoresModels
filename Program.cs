@@ -66,7 +66,8 @@ namespace ConsoleApp1
 
         public static void TestPull()
         {
-            LeagueService leagueService = new LeagueService(new DatabaseConnection());
+            DatabaseConnection dbConnection = new DatabaseConnection();
+            LeagueService leagueService = new LeagueService(dbConnection);
 
             List<League> leagues = leagueService.GetAllLeagues();
             foreach (League league in leagues)
@@ -100,18 +101,20 @@ namespace ConsoleApp1
             ClearDatabase();
             Console.WriteLine("Database Cleared");
             LeagueService leagueService = new LeagueService(new DatabaseConnection());
+            TeamService teamService = new TeamService(new DatabaseConnection());
+            PlayerService playerService = new PlayerService(new DatabaseConnection());
 
             League dundeeLeague = leagueService.CreateLeague("Dundee League");
 
-            Team douglas = new Team("Douglas", dundeeLeague);
-            Team fintry = new Team("Fintry", dundeeLeague);
-            Team ferry = new Team("Ferry", dundeeLeague);
-            Team lochee = new Team("Lochee", dundeeLeague);
+            Team douglas = teamService.CreateTeam("Douglas", dundeeLeague);
+            Team fintry = teamService.CreateTeam("Fintry", dundeeLeague);
+            Team ferry = teamService.CreateTeam("Ferry", dundeeLeague);
+            Team lochee = teamService.CreateTeam("Lochee", dundeeLeague);
 
-            Player johnSmith = new Player("John", "Smith", 25, 1, 1, douglas);
-            Player daveSmith = new Player("Dave", "Smith", 25, 2, 2, douglas);
-            Player bobSmith = new Player("Bob", "Smith", 25, 7, 3, douglas);
-            Player eoinSmith = new Player("Eoin", "Smith", 25, 9, 4, douglas);
+            Player johnSmith = playerService.CreatePlayer("John", "Smith", 25, 1, 1, douglas);
+            Player daveSmith = playerService.CreatePlayer("Dave", "Smith", 25, 2, 2, douglas);
+            Player bobSmith = playerService.CreatePlayer("Bob", "Smith", 25, 7, 3, douglas);
+            Player eoinSmith = playerService.CreatePlayer("Eoin", "Smith", 25, 9, 4, douglas);
 
             List<Player> douglasVsFerryScorers = new List<Player> { bobSmith, eoinSmith };
             List<Player> douglasVsFerryAssisters = new List<Player> { daveSmith, bobSmith };
@@ -126,16 +129,15 @@ namespace ConsoleApp1
             Match ferryVsLochee = new Match(ferry, lochee, date, 1, 2);
 
             League angusLeague = leagueService.CreateLeague("Angus League");
+            Team arbroath = teamService.CreateTeam("Arbroath", angusLeague);
+            Team brechin = teamService.CreateTeam("Brechin", angusLeague);
+            Team carnoustie = teamService.CreateTeam("Carnoustie", angusLeague);
+            Team forfar = teamService.CreateTeam("Forfar", angusLeague);
 
-            Team arbroath = new Team("Arbroath", angusLeague);
-            Team brechin = new Team("Brechin", angusLeague);
-            Team carnoustie = new Team("Carnoustie", angusLeague);
-            Team forfar = new Team("Forfar", angusLeague);
-
-            Player johnDoe = new Player("John", "Doe", 25, 1, 1, arbroath);
-            Player daveDoe = new Player("Dave", "Doe", 25, 2, 2, arbroath);
-            Player bobDoe = new Player("Bob", "Doe", 25, 7, 3, arbroath);
-            Player eoinDoe = new Player("Eoin", "Doe", 25, 9, 4, arbroath);
+            Player johnDoe = playerService.CreatePlayer("John", "Doe", 25, 1, 1, arbroath);
+            Player daveDoe = playerService.CreatePlayer("Dave", "Doe", 25, 2, 2, arbroath);
+            Player bobDoe = playerService.CreatePlayer("Bob", "Doe", 25, 7, 3, arbroath);
+            Player eoinDoe = playerService.CreatePlayer("Eoin", "Doe", 25, 9, 4, arbroath);
 
             List<Player> arbroathVsBrechinScorers = new List<Player> { bobDoe, eoinDoe };
             List<Player> arbroathVsBrechinAssisters = new List<Player> { daveDoe, bobDoe };

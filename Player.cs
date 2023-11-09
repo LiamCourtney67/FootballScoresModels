@@ -1,6 +1,4 @@
-﻿using MySql.Data.MySqlClient;
-
-namespace ConsoleApp1
+﻿namespace ConsoleApp1
 {
     internal class Player
     {
@@ -18,13 +16,13 @@ namespace ConsoleApp1
         };
         private string _position;
         private Team _team;
-        private int _goalsScored;
+        public int _goalsScored;
         private int _assists;
         private int _cleanSheets;
         private int _yellowCards;
         private int _redCards;
 
-        public int PlayerID { get => _playerID; private set => _playerID = value; }
+        public int PlayerID { get => _playerID; set => _playerID = value; }
         public string FirstName
         {
             get => _firstName;
@@ -117,22 +115,18 @@ namespace ConsoleApp1
                 _team = value;
             }
         }
-        public int GoalsScored { get => _goalsScored; private set => _goalsScored = value; }
-        public int Assists { get => _assists; private set => _assists = value; }
-        public int CleanSheets { get => _cleanSheets; private set => _cleanSheets = value; }
-        public int YellowCards { get => _yellowCards; private set => _yellowCards = value; }
-        public int RedCards { get => _redCards; private set => _redCards = value; }
+        public int GoalsScored { get => _goalsScored; set => _goalsScored = value; }
+        public int Assists { get => _assists; set => _assists = value; }
+        public int CleanSheets { get => _cleanSheets; set => _cleanSheets = value; }
+        public int YellowCards { get => _yellowCards; set => _yellowCards = value; }
+        public int RedCards { get => _redCards; set => _redCards = value; }
 
         public Player(string firstName, string lastName, Team team)
         {
             this.FirstName = firstName;
             this.LastName = lastName;
             this.Team = team;
-            if (AddToDatabase(new DatabaseConnection()))
-            {
-                team.AddPlayer(this);
-            }
-            else { throw new Exception("Failed to add player to the database."); }
+            team.AddPlayer(this);
         }
 
         public Player(string firstName, string lastName, int age, int kitNumber, int positionKey, Team team)
@@ -151,11 +145,8 @@ namespace ConsoleApp1
             {
                 throw new ArgumentException("Invalid positionKey, must be 1-4");
             }
-            if (AddToDatabase(new DatabaseConnection()))
-            {
-                team.AddPlayer(this);
-            }
-            else { throw new Exception("Failed to add player to the database."); }
+
+            team.AddPlayer(this);
         }
 
         public Player(int playerID, string firstName, string lastName, int age, int kitNumber, string position, Team team, int goalsScored, int assists, int cleanSheets, int yellowCards, int redCards)
@@ -172,144 +163,6 @@ namespace ConsoleApp1
             this.CleanSheets = cleanSheets;
             this.YellowCards = yellowCards;
             this.RedCards = redCards;
-        }
-
-        private bool DoesKitNumberExistsInTeam(DatabaseConnection dbConnection)
-        {
-            if (dbConnection.OpenConnection())
-            {
-                try
-                {
-                    using (MySqlConnection connection = dbConnection.GetConnection())
-                    {
-                        string checkQuery = "SELECT COUNT(*) FROM Players WHERE PlayerKitNumber = @KitNumber AND TeamID = @TeamID;";
-                        using (MySqlCommand command = new MySqlCommand(checkQuery, connection))
-                        {
-                            command.Parameters.AddWithValue("@KitNumber", KitNumber);
-                            command.Parameters.AddWithValue("@TeamID", Team.TeamID);
-
-                            int count = Convert.ToInt32(command.ExecuteScalar());
-
-                            return count > 0;
-                        }
-                    }
-                }
-                finally
-                {
-                    dbConnection.CloseConnection();
-                }
-            }
-            else
-            {
-                Console.WriteLine("Failed to open the database connection.");
-                return false;
-            }
-        }
-
-        private bool AddToDatabase(DatabaseConnection dbConnection)
-        {
-            if (!DoesKitNumberExistsInTeam(dbConnection))
-            {
-                if (dbConnection.OpenConnection())
-                {
-                    try
-                    {
-                        using (MySqlConnection connection = dbConnection.GetConnection())
-                        {
-                            string insertQuery = "INSERT INTO Players (PlayerFirstName, PlayerLastName, PlayerAge, PlayerKitNumber, Position, TeamID, GoalsScored, Assists, CleanSheets, YellowCards, RedCards) " +
-                                "VALUES (@PlayerFirstName, @PlayerSurname, @PlayerAge, @PlayerKitNumber, @Position, @TeamID, @GoalsScored, @Assists, @CleanSheets, @YellowCards, @RedCards); SELECT LAST_INSERT_ID();";
-                            using (MySqlCommand command = new MySqlCommand(insertQuery, connection))
-                            {
-                                command.Parameters.AddWithValue("@PlayerFirstName", FirstName);
-                                command.Parameters.AddWithValue("@PlayerSurname", LastName);
-                                command.Parameters.AddWithValue("@PlayerAge", Age);
-                                command.Parameters.AddWithValue("@PlayerKitNumber", KitNumber);
-                                command.Parameters.AddWithValue("@Position", Position);
-                                command.Parameters.AddWithValue("@TeamID", Team.TeamID);
-                                command.Parameters.AddWithValue("@GoalsScored", GoalsScored);
-                                command.Parameters.AddWithValue("@Assists", Assists);
-                                command.Parameters.AddWithValue("@CleanSheets", CleanSheets);
-                                command.Parameters.AddWithValue("@YellowCards", YellowCards);
-                                command.Parameters.AddWithValue("@RedCards", RedCards);
-
-                                PlayerID = Convert.ToInt32(command.ExecuteScalar());
-
-                                if (PlayerID > 0)
-                                {
-                                    Console.WriteLine("New player added to the database with ID: " + PlayerID);
-                                    return true;
-                                }
-                                return true;
-                            }
-                        }
-                    }
-                    finally
-                    {
-                        dbConnection.CloseConnection();
-                    }
-                }
-                else
-                {
-                    Console.WriteLine("Failed to open the database connection.");
-                    return false;
-                }
-            }
-            else
-            {
-                Console.WriteLine("A player with the same kit number already exists in the same team.");
-                return false;
-            }
-        }
-
-        public static List<Player> GetAllPlayersForTeamFromDatabase(Team team, DatabaseConnection dbConnection)
-        {
-            List<Player> players = new List<Player>();
-            if (dbConnection.OpenConnection())
-            {
-                try
-                {
-                    using (MySqlConnection connection = dbConnection.GetConnection())
-                    {
-                        string selectQuery = $"SELECT * FROM Players WHERE TeamID = {team.TeamID};";
-                        using (MySqlCommand command = new MySqlCommand(selectQuery, connection))
-                        {
-                            using (MySqlDataReader reader = command.ExecuteReader())
-                            {
-                                while (reader.Read())
-                                {
-                                    Player player = new Player(
-                                        Convert.ToInt32(reader["PlayerID"]),
-                                        reader["PlayerFirstName"].ToString(),
-                                        reader["PlayerLastName"].ToString(),
-                                        Convert.ToInt32(reader["PlayerAge"]),
-                                        Convert.ToInt32(reader["PlayerKitNumber"]),
-                                        reader["Position"].ToString(),
-                                        team,
-                                        Convert.ToInt32(reader["GoalsScored"]),
-                                        Convert.ToInt32(reader["Assists"]),
-                                        Convert.ToInt32(reader["CleanSheets"]),
-                                        Convert.ToInt32(reader["YellowCards"]),
-                                        Convert.ToInt32(reader["RedCards"])
-                                    );
-                                    players.Add(player);
-
-                                }
-                                reader.Close();
-                                return players;
-                            }
-                        }
-                    }
-                }
-                finally
-                {
-                    dbConnection.CloseConnection();
-                }
-            }
-            else
-            {
-                Console.WriteLine("Failed to open the database connection.");
-            }
-            throw new Exception("Failed to get player from the database.");
         }
 
         private bool IsValidName(string name)
@@ -335,59 +188,22 @@ namespace ConsoleApp1
         public void ScoreGoal(int amount)
         {
             GoalsScored += amount;
-            AddStatistic(0, amount);
         }
         public void AssistGoal(int amount)
         {
             Assists += amount;
-            AddStatistic(1, amount);
         }
         public void CleanSheet(int amount)
         {
             CleanSheets += amount;
-            AddStatistic(2, amount);
         }
         public void YellowCard(int amount)
         {
             YellowCards += amount;
-            AddStatistic(3, amount);
         }
         public void RedCard(int amount)
         {
             RedCards += amount;
-            AddStatistic(4, amount);
-        }
-
-        public void AddStatistic(int index, int amount)
-        {
-            string[] stats = { "GoalsScored", "Assists", "CleanSheets", "YellowCards", "RedCards" };
-
-            DatabaseConnection dbConnection = new DatabaseConnection();
-
-            if (dbConnection.OpenConnection())
-            {
-                try
-                {
-                    using (MySqlConnection connection = dbConnection.GetConnection())
-                    {
-                        string columnName = stats[index];
-                        string updateQuery = $"UPDATE Players SET {columnName} = {columnName} + {amount} WHERE PlayerID = @PlayerID;";
-                        using (MySqlCommand command = new MySqlCommand(updateQuery, connection))
-                        {
-                            command.Parameters.AddWithValue("@PlayerID", PlayerID);
-                            command.ExecuteNonQuery();
-                        }
-                    }
-                }
-                finally
-                {
-                    dbConnection.CloseConnection();
-                }
-            }
-            else
-            {
-                Console.WriteLine("Failed to open the database connection.");
-            }
         }
     }
 }

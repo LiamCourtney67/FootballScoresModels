@@ -38,6 +38,7 @@
         {
             this.LeagueID = leagueID;
             this.Name = name;
+            this.Teams = LeagueService.TeamService.GetAllTeamsForLeague(this);
         }
 
         // Adding, removing, and sorting teams, matches, champions, and relegated teams

@@ -3,10 +3,14 @@
     internal class LeagueService
     {
         private readonly LeagueDataAccess _leagueDataAccess;
+        private readonly TeamService _teamService;
+
+        public TeamService TeamService { get => _teamService; }
 
         public LeagueService(DatabaseConnection dbConnection)
         {
             _leagueDataAccess = new LeagueDataAccess(dbConnection);
+            _teamService = new TeamService(dbConnection);
         }
 
         public League CreateLeague(string name)
@@ -26,7 +30,7 @@
         public League GetLeague(int leagueID)
         {
             League league = _leagueDataAccess.GetLeagueFromDatabase(leagueID);
-            league.Teams = Team.GetAllTeamsForLeagueFromDatabase(league, new DatabaseConnection());
+            league.Teams = TeamService.GetAllTeamsForLeague(league);
             league.Matches = Match.GetAllMatchesForLeagueFromDatabase(league, new DatabaseConnection());
             return league;
         }
@@ -36,7 +40,7 @@
             List<League> leagues = _leagueDataAccess.GetAllLeaguesFromDatabase();
             foreach (League league in leagues)
             {
-                league.Teams = Team.GetAllTeamsForLeagueFromDatabase(league, new DatabaseConnection());
+                league.Teams = _teamService.GetAllTeamsForLeague(league);
                 league.Matches = Match.GetAllMatchesForLeagueFromDatabase(league, new DatabaseConnection());
             }
             return leagues;
