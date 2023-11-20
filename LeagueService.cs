@@ -4,13 +4,16 @@
     {
         private readonly LeagueDataAccess _leagueDataAccess;
         private readonly TeamService _teamService;
+        private readonly MatchService _matchService;
 
         public TeamService TeamService { get => _teamService; }
+        public MatchService MatchService { get => _matchService; }
 
         public LeagueService(DatabaseConnection dbConnection)
         {
             _leagueDataAccess = new LeagueDataAccess(dbConnection);
             _teamService = new TeamService(dbConnection);
+            _matchService = new MatchService(dbConnection);
         }
 
         public League CreateLeague(string name)
@@ -31,7 +34,7 @@
         {
             League league = _leagueDataAccess.GetLeagueFromDatabase(leagueID);
             league.Teams = TeamService.GetAllTeamsForLeague(league);
-            league.Matches = Match.GetAllMatchesForLeagueFromDatabase(league, new DatabaseConnection());
+            league.Matches = MatchService.GetAllMatchesForLeague(league);
             return league;
         }
 
@@ -41,7 +44,7 @@
             foreach (League league in leagues)
             {
                 league.Teams = _teamService.GetAllTeamsForLeague(league);
-                league.Matches = Match.GetAllMatchesForLeagueFromDatabase(league, new DatabaseConnection());
+                league.Matches = MatchService.GetAllMatchesForLeague(league);
             }
             return leagues;
         }

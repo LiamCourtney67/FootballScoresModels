@@ -95,7 +95,7 @@ namespace ConsoleApp1
             }
             catch (MySqlException e)
             {
-                throw new Exception("Failed to execute the insert query or retrieve the LeagueID: " +           );
+                throw new Exception("Failed to execute the insert query or retrieve the LeagueID: " + e.Message + " " + e.InnerException);
             }
             catch (Exception e)
             {

@@ -77,13 +77,6 @@
         {
             Matches.Remove(match);
         }
-
-        public void CalculateStats()
-        {
-            GamesPlayed = GamesWon + GamesDrawn + GamesLost;
-            Points = (GamesWon * 3) + GamesDrawn;
-            GoalDifference = GoalsFor - GoalsAgainst;
-        }
     }
 }
 

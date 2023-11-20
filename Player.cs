@@ -193,17 +193,17 @@
         {
             Assists += amount;
         }
-        public void CleanSheet(int amount)
+        public void CleanSheet()
         {
-            CleanSheets += amount;
+            CleanSheets++;
         }
         public void YellowCard(int amount)
         {
             YellowCards += amount;
         }
-        public void RedCard(int amount)
+        public void RedCard()
         {
-            RedCards += amount;
+            RedCards++;
         }
     }
 }

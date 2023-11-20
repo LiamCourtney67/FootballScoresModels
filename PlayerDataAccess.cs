@@ -190,7 +190,7 @@ namespace ConsoleApp1
             catch (MySqlException e)
             {
                 // Handle any MySQL-specific exceptions that might arise during database operations.
-                throw new Exception("An error occurred while retrieving players from the database: " +              );
+                throw new Exception("An error occurred while retrieving players from the database: " + e.Message + " " + e.InnerException);
             }
             finally
             {

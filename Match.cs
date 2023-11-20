@@ -1,6 +1,4 @@
-﻿using MySql.Data.MySqlClient;
-
-namespace ConsoleApp1
+﻿namespace ConsoleApp1
 {
     internal class Match
     {
@@ -11,19 +9,29 @@ namespace ConsoleApp1
         private DateTime _datePlayed;
         private int _homeGoals;
         private int _awayGoals;
+        private List<Player> _scorers = new List<Player>();
+        private List<Player> _assisters = new List<Player>();
+        private List<Player> _yellowCards = new List<Player>();
+        private List<Player> _redCards = new List<Player>();
+        private List<Player> _cleanSheets = new List<Player>();
         private string _result;
 
         private PlayerService _playerService = new PlayerService(new DatabaseConnection());
         private TeamService _teamService = new TeamService(new DatabaseConnection());
 
-        public int MatchID { get => _matchID; private set => _matchID = value; }
-        public Team HomeTeam { get => _homeTeam; private set => _homeTeam = value; }
-        public Team AwayTeam { get => _awayTeam; private set => _awayTeam = value; }
+        public int MatchID { get => _matchID; set => _matchID = value; }
+        public Team HomeTeam { get => _homeTeam; set => _homeTeam = value; }
+        public Team AwayTeam { get => _awayTeam; set => _awayTeam = value; }
         public League League { get => _league; set => _league = value; }
-        public DateTime DatePlayed { get => _datePlayed; private set => _datePlayed = value; }
-        public int HomeGoals { get => _homeGoals; private set => _homeGoals = value; }
-        public int AwayGoals { get => _awayGoals; private set => _awayGoals = value; }
-        public string Result { get => _result; private set => _result = value; }
+        public DateTime DatePlayed { get => _datePlayed; set => _datePlayed = value; }
+        public int HomeGoals { get => _homeGoals; set => _homeGoals = value; }
+        public int AwayGoals { get => _awayGoals; set => _awayGoals = value; }
+        public List<Player> Scorers { get => _scorers; set => _scorers = value; }
+        public List<Player> Assisters { get => _assisters; set => _assisters = value; }
+        public List<Player> YellowCards { get => _yellowCards; set => _yellowCards = value; }
+        public List<Player> RedCards { get => _redCards; set => _redCards = value; }
+        public List<Player> CleanSheets { get => _cleanSheets; set => _cleanSheets = value; }
+        public string Result { get => _result; set => _result = value; }
 
         public Match(Team homeTeam, Team awayTeam, DateTime datePlayed, int homeGoals, int awayGoals)
         {
@@ -42,15 +50,8 @@ namespace ConsoleApp1
             }
             else { throw new Exception("The teams are not in the same league."); }
 
-
-            if (AddToDatabase(new DatabaseConnection()))
-            {
-                AssignPoints();
-                HomeTeam.CalculateStats();
-                AwayTeam.CalculateStats();
-                CheckCleenSheets();
-            }
-            else { throw new Exception("Failed to add match to the database."); }
+            AssignTeamStats();
+            CheckCleenSheets();
         }
 
         public Match(Team homeTeam, Team awayTeam, DateTime datePlayed, int homeGoals, int awayGoals, List<Player> scorers)
@@ -71,20 +72,14 @@ namespace ConsoleApp1
             }
             else { throw new Exception("The teams are not in the same league."); }
 
+            AssignTeamStats();
+            CheckCleenSheets();
 
-            if (AddToDatabase(new DatabaseConnection()))
+            foreach (Player player in scorers)
             {
-                AssignPoints();
-                HomeTeam.CalculateStats();
-                AwayTeam.CalculateStats();
-                CheckCleenSheets();
-
-                foreach (Player player in scorers)
-                {
-                    AddScorer(player, 1);
-                }
+                Scorers.Add(player);
+                player.ScoreGoal(1);
             }
-            else { throw new Exception("Failed to add match to the database."); }
         }
 
         public Match(Team homeTeam, Team awayTeam, DateTime datePlayed, int homeGoals, int awayGoals, List<Player> scorers, List<Player> assisters)
@@ -104,23 +99,19 @@ namespace ConsoleApp1
             }
             else { throw new Exception("The teams are not in the same league."); }
 
-            if (AddToDatabase(new DatabaseConnection()))
-            {
-                AssignPoints();
-                HomeTeam.CalculateStats();
-                AwayTeam.CalculateStats();
-                CheckCleenSheets();
+            AssignTeamStats();
+            CheckCleenSheets();
 
-                foreach (Player player in scorers)
-                {
-                    AddScorer(player, 1);
-                }
-                foreach (Player player in assisters)
-                {
-                    AddAssit(player, 1);
-                }
+            foreach (Player player in scorers)
+            {
+                Scorers.Add(player);
+                player.ScoreGoal(1);
             }
-            else { throw new Exception("Failed to add match to the database."); }
+            foreach (Player player in assisters)
+            {
+                Assisters.Add(player);
+                player.AssistGoal(1);
+            }
         }
 
         public Match(int matchID, Team homeTeam, Team awayTeam, DateTime datePlayed, int homeGoals, int awayGoals, string result)
@@ -140,138 +131,6 @@ namespace ConsoleApp1
             else { throw new Exception("The teams are not in the same league."); }
         }
 
-        public bool DoesMatchExist(DatabaseConnection dbConnection)
-        {
-            if (dbConnection.OpenConnection())
-            {
-                try
-                {
-                    using (MySqlConnection connection = dbConnection.GetConnection())
-                    {
-                        string checkQuery = "SELECT COUNT(*) FROM Matches WHERE HomeTeamID = @HomeTeamID AND AwayTeamID = @AwayTeamID AND DatePlayed = @DatePlayed;";
-                        using (MySqlCommand command = new MySqlCommand(checkQuery, connection))
-                        {
-                            command.Parameters.AddWithValue("@HomeTeamID", HomeTeam.TeamID);
-                            command.Parameters.AddWithValue("@AwayTeamID", AwayTeam.TeamID);
-                            command.Parameters.AddWithValue("@DatePlayed", DatePlayed.ToString("yyyy-MM-dd HH:mm:ss"));
-
-                            int count = Convert.ToInt32(command.ExecuteScalar());
-
-                            return count > 0;
-                        }
-                    }
-                }
-                finally
-                {
-                    dbConnection.CloseConnection();
-                }
-            }
-            else
-            {
-                Console.WriteLine("Failed to open the database connection.");
-                return false;
-            }
-        }
-
-        public bool AddToDatabase(DatabaseConnection dbConnection)
-        {
-            if (!DoesMatchExist(dbConnection))
-            {
-                if (dbConnection.OpenConnection())
-                {
-                    try
-                    {
-                        using (MySqlConnection connection = dbConnection.GetConnection())
-                        {
-                            string insertQuery = "INSERT INTO Matches (HomeTeamID, AwayTeamID, LeagueID, DatePlayed, HomeGoals, AwayGoals, Result) " +
-                                ("VALUES (@HomeTeamID, @AwayTeamID, @LeagueID, @DatePlayed, @HomeGoals, @AwayGoals, @Result); SELECT LAST_INSERT_ID();");
-                            using (MySqlCommand command = new MySqlCommand(insertQuery, connection))
-                            {
-                                command.Parameters.AddWithValue("@HomeTeamID", HomeTeam.TeamID);
-                                command.Parameters.AddWithValue("@AwayTeamID", AwayTeam.TeamID);
-                                command.Parameters.AddWithValue("@LeagueID", League.LeagueID);
-                                command.Parameters.AddWithValue("@DatePlayed", DatePlayed);
-                                command.Parameters.AddWithValue("@HomeGoals", HomeGoals);
-                                command.Parameters.AddWithValue("@AwayGoals", AwayGoals);
-                                command.Parameters.AddWithValue("@Result", Result);
-
-                                int matchID = Convert.ToInt32(command.ExecuteScalar());
-
-                                if (matchID > 0)
-                                {
-                                    Console.WriteLine("New match added to the database with ID: " + matchID);
-                                    return true;
-                                }
-                                return true;
-                            }
-                        }
-                    }
-                    finally
-                    {
-                        dbConnection.CloseConnection();
-                    }
-                }
-                else
-                {
-                    Console.WriteLine("Failed to open the database connection.");
-                    return false;
-                }
-            }
-            else
-            {
-                Console.WriteLine("A match with the same teams and sate already exists.");
-                return false;
-            }
-        }
-
-        public static List<Match> GetAllMatchesForLeagueFromDatabase(League league, DatabaseConnection dbConnection)
-        {
-            List<Match> matches = new List<Match>();
-            if (dbConnection.OpenConnection())
-            {
-                try
-                {
-                    using (MySqlConnection connection = dbConnection.GetConnection())
-                    {
-                        string selectQuery = $"SELECT * FROM Matches WHERE LeagueID = {league.LeagueID};";
-                        using (MySqlCommand command = new MySqlCommand(selectQuery, connection))
-                        {
-                            using (MySqlDataReader reader = command.ExecuteReader())
-                            {
-                                while (reader.Read())
-                                {
-                                    Match match = new Match(
-                                        Convert.ToInt32(reader["MatchID"]),
-                                        league.Teams.Find(team => team.TeamID == Convert.ToInt32(reader["HomeTeamID"])),
-                                        league.Teams.Find(team => team.TeamID == Convert.ToInt32(reader["AwayTeamID"])),
-                                        Convert.ToDateTime(reader["DatePlayed"]),
-                                        Convert.ToInt32(reader["HomeGoals"]),
-                                        Convert.ToInt32(reader["AwayGoals"]),
-                                        reader["Result"].ToString()
-                                    );
-                                    match.HomeTeam.AddMatch(match);
-                                    match.AwayTeam.AddMatch(match);
-                                    matches.Add(match);
-
-                                }
-                                reader.Close();
-                                return matches;
-                            }
-                        }
-                    }
-                }
-                finally
-                {
-                    dbConnection.CloseConnection();
-                }
-            }
-            else
-            {
-                Console.WriteLine("Failed to open the database connection.");
-            }
-            throw new Exception("Failed to get match from the database.");
-        }
-
         private string CalculateResult()
         {
             if (HomeGoals > AwayGoals)
@@ -288,25 +147,14 @@ namespace ConsoleApp1
             }
         }
 
-        private void AssignPoints()
+        public void AssignTeamStats()
         {
             HomeTeam.GamesPlayed++;
-            _teamService.AddStatisticToDatabase(HomeTeam, "GamesPlayed");
-
             HomeTeam.GoalsFor += HomeGoals;
-            _teamService.AddStatisticToDatabase(HomeTeam, "GoalsFor");
-
             HomeTeam.GoalsAgainst += AwayGoals;
-            _teamService.AddStatisticToDatabase(HomeTeam, "GoalsAgainst");
-
             AwayTeam.GamesPlayed++;
-            _teamService.AddStatisticToDatabase(AwayTeam, "GamesPlayed");
-
             AwayTeam.GoalsFor += AwayGoals;
-            _teamService.AddStatisticToDatabase(AwayTeam, "GoalsFor");
-
             AwayTeam.GoalsAgainst += HomeGoals;
-            _teamService.AddStatisticToDatabase(AwayTeam, "GoalsAgainst");
 
             if (Result == "Home")
             {
@@ -331,16 +179,9 @@ namespace ConsoleApp1
             }
 
             HomeTeam.Points = (HomeTeam.GamesWon * 3) + HomeTeam.GamesDrawn;
-            _teamService.AddStatisticToDatabase(HomeTeam, "Points");
-
             AwayTeam.Points = (AwayTeam.GamesWon * 3) + AwayTeam.GamesDrawn;
-            _teamService.AddStatisticToDatabase(AwayTeam, "Points");
-
             HomeTeam.GoalDifference = HomeTeam.GoalsFor - HomeTeam.GoalsAgainst;
-            _teamService.AddStatisticToDatabase(HomeTeam, "GoalDifference");
-
             AwayTeam.GoalDifference = AwayTeam.GoalsFor - AwayTeam.GoalsAgainst;
-            _teamService.AddStatisticToDatabase(AwayTeam, "GoalDifference");
         }
 
         private void CheckCleenSheets()
@@ -351,7 +192,8 @@ namespace ConsoleApp1
                 {
                     if (player.Position == "Goalkeeper" || player.Position == "Defender")
                     {
-                        AddCleanSheet(player, 1);
+                        CleanSheets.Add(player);
+                        player.CleanSheet();
                     }
                 }
             }
@@ -361,16 +203,11 @@ namespace ConsoleApp1
                 {
                     if (player.Position == "Goalkeeper" || player.Position == "Defender")
                     {
-                        AddCleanSheet(player, 1);
+                        CleanSheets.Add(player);
+                        player.CleanSheet();
                     }
                 }
             }
         }
-
-        public void AddScorer(Player player, int amount) { player.ScoreGoal(amount); _playerService.AddStatisticToDatabase(player, "GoalsScored"); }
-        public void AddAssit(Player player, int amount) { player.AssistGoal(amount); _playerService.AddStatisticToDatabase(player, "Assists"); }
-        public void AddCleanSheet(Player player, int amount) { player.CleanSheet(amount); _playerService.AddStatisticToDatabase(player, "CleanSheets"); }
-        public void AddYellowCard(Player player, int amount) { player.YellowCard(amount); _playerService.AddStatisticToDatabase(player, "YellowCards"); }
-        public void AddRedCard(Player player, int amount) { player.RedCard(amount); _playerService.AddStatisticToDatabase(player, "RedCards"); }
     }
 }
