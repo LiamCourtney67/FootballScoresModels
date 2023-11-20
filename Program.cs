@@ -103,6 +103,7 @@ namespace ConsoleApp1
             LeagueService leagueService = new LeagueService(new DatabaseConnection());
             TeamService teamService = new TeamService(new DatabaseConnection());
             PlayerService playerService = new PlayerService(new DatabaseConnection());
+            MatchService matchService = new MatchService(new DatabaseConnection());
 
             League dundeeLeague = leagueService.CreateLeague("Dundee League");
 
@@ -123,10 +124,10 @@ namespace ConsoleApp1
             List<Player> douglasVsFintryAssisters = new List<Player> { bobSmith, bobSmith, eoinSmith };
             DateTime date = DateTime.Now;
 
-            Match douglasVsFerry = new Match(douglas, ferry, date, 2, 0, douglasVsFerryScorers, douglasVsFerryAssisters);
-            Match fintryVsLochee = new Match(fintry, lochee, date, 1, 1);
-            Match douglasVsFintry = new Match(douglas, fintry, date, 3, 1, douglasVsFintryScorers, douglasVsFintryAssisters);
-            Match ferryVsLochee = new Match(ferry, lochee, date, 1, 2);
+            Match douglasVsFerry = matchService.CreateMatch(douglas, ferry, date, 2, 0, douglasVsFerryScorers, douglasVsFerryAssisters);
+            Match fintryVsLochee = matchService.CreateMatch(fintry, lochee, date, 1, 1);
+            Match douglasVsFintry = matchService.CreateMatch(douglas, fintry, date, 3, 1, douglasVsFintryScorers, douglasVsFintryAssisters);
+            Match ferryVsLochee = matchService.CreateMatch(ferry, lochee, date, 1, 2);
 
             League angusLeague = leagueService.CreateLeague("Angus League");
             Team arbroath = teamService.CreateTeam("Arbroath", angusLeague);
@@ -145,27 +146,12 @@ namespace ConsoleApp1
             List<Player> arbroathVsCarnoustieScorers = new List<Player> { bobDoe, eoinDoe, eoinDoe };
             List<Player> arbroathVsCarnoustieAssisters = new List<Player> { bobDoe, bobDoe, eoinDoe };
 
-            Match arbroathVsBrechin = new Match(arbroath, brechin, date, 2, 0, arbroathVsBrechinScorers, arbroathVsBrechinAssisters);
-            Match carnoustieVsForfar = new Match(carnoustie, forfar, date, 1, 1);
-            Match arbroathVsCarnoustie = new Match(arbroath, carnoustie, date, 3, 1, arbroathVsCarnoustieScorers, arbroathVsCarnoustieAssisters);
-            Match brechinVsForfar = new Match(brechin, forfar, date, 1, 2);
+            Match arbroathVsBrechin = matchService.CreateMatch(arbroath, brechin, date, 2, 0, arbroathVsBrechinScorers, arbroathVsBrechinAssisters);
+            Match carnoustieVsForfar = matchService.CreateMatch(carnoustie, forfar, date, 1, 1);
+            Match arbroathVsCarnoustie = matchService.CreateMatch(arbroath, carnoustie, date, 3, 1, arbroathVsCarnoustieScorers, arbroathVsCarnoustieAssisters);
+            Match brechinVsForfar = matchService.CreateMatch(brechin, forfar, date, 1, 2);
 
             Console.WriteLine("Database Populated");
-
-            //foreach (Team team in dundeeLeague.Teams)
-            //{
-            //    Console.WriteLine($"Name: {team.Name}, GamesPlayed: {team.GamesPlayed}, GamesWon: {team.GamesWon}, GamesDrawn: {team.GamesDrawn}, GamesLost: {team.GamesLost}, GoalsFor: {team.GoalsFor}, GoalsAgainst: {team.GoalsAgainst}, GoalDifference: {team.GoalDifference}, Points: {team.Points}");
-            //}
-
-            //foreach (Player player in douglas.Players)
-            //{
-            //    if (player.Position == "Goalkeeper" || player.Position == "Defender")
-            //        Console.WriteLine($"FirstName: {player.FirstName}, LastName: {player.LastName}, Age: {player.Age}, KitNumber: {player.KitNumber}, Position: {player.Position}, GoalsScored: {player.GoalsScored}, Assists: {player.Assists}, CleanSheets: {player.CleanSheets}, YellowCards: {player.YellowCards}, RedCards: {player.RedCards}");
-
-            //    else
-            //        Console.WriteLine($"FirstName: {player.FirstName}, LastName: {player.LastName}, Age: {player.Age}, KitNumber: {player.KitNumber}, Position: {player.Position}, GoalsScored: {player.GoalsScored}, Assists: {player.Assists}, YellowCards: {player.YellowCards}, RedCards: {player.RedCards}");
-
-            //}
         }
     }
 }

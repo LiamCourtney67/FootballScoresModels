@@ -106,7 +106,7 @@ namespace ConsoleApp1
             }
             catch (MySqlException e)
             {
-                throw new Exception("Failed to execute the insert query or retrieve the TeamID: " +                         );
+                throw new Exception("Failed to execute the insert query or retrieve the TeamID: " + e.Message + " " + e.InnerException);
             }
             catch (Exception e)
             {
@@ -196,6 +196,13 @@ namespace ConsoleApp1
             }
         }
 
+        /// <summary>
+        /// Add a statistic to the database for a specific team.
+        /// </summary>
+        /// <param name="team">The team for the stats to be added to.</param>
+        /// <param name="property">The property of the stat to be added.</param>
+        /// <exception cref="ArgumentException"></exception>
+        /// <exception cref="Exception"></exception>
         public void AddStatisticToDatabase(Team team, PropertyInfo property)
         {
             // Validate that the property name matches a valid column name to prevent SQL injection.
